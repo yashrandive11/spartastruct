@@ -158,6 +158,23 @@ def _extract_class(class_node: ast.ClassDef, file_imports: ImportInfo) -> ClassI
                     ))
         elif isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)):
             methods.append(_extract_method(item))
+            # Also extract annotated self.x assignments from __init__
+            if item.name == "__init__":
+                for stmt in ast.walk(item):
+                    if (
+                        isinstance(stmt, ast.AnnAssign)
+                        and isinstance(stmt.target, ast.Attribute)
+                        and isinstance(stmt.target.value, ast.Name)
+                        and stmt.target.value.id in ("self", "cls")
+                    ):
+                        name = stmt.target.attr
+                        type_str = _annotation_to_str(stmt.annotation)
+                        if not any(a.name == name for a in attributes):
+                            attributes.append(AttributeInfo(
+                                name=name,
+                                type=type_str,
+                                visibility=_visibility(name),
+                            ))
 
     # Check for abstractmethod usage
     if any("abstractmethod" in m.decorators for m in methods):
@@ -186,7 +203,7 @@ def _extract_method(node: ast.FunctionDef | ast.AsyncFunctionDef) -> MethodInfo:
         return_type=_annotation_to_str(node.returns),
         decorators=_decorator_names(node.decorator_list),
         is_async=isinstance(node, ast.AsyncFunctionDef),
-        calls=[],  # filled in later
+        calls=_extract_calls(node),
         visibility=_visibility(node.name),
     )
 
@@ -205,6 +222,101 @@ def _extract_params(node: ast.FunctionDef | ast.AsyncFunctionDef) -> list[ParamI
         type_str = _annotation_to_str(arg.annotation) if arg.annotation else "Any"
         params.append(ParamInfo(name=arg.arg, type=type_str))
     return params
+
+
+def _extract_calls(node: ast.FunctionDef | ast.AsyncFunctionDef) -> list[str]:
+    """Extract all function call names from a function/method body."""
+    calls = []
+    for child in ast.walk(node):
+        if isinstance(child, ast.Call):
+            if isinstance(child.func, ast.Name):
+                calls.append(child.func.id)
+            elif isinstance(child.func, ast.Attribute):
+                calls.append(f"{ast.unparse(child.func.value)}.{child.func.attr}")
+    return list(dict.fromkeys(calls))  # deduplicate preserving order
+
+
+_HTTP_METHODS = frozenset({"get", "post", "put", "patch", "delete", "head", "options"})
+
+
+def _extract_first_string_arg(call: ast.Call) -> str | None:
+    """Extract the first positional argument as a string, if it's a string literal."""
+    if call.args and isinstance(call.args[0], ast.Constant) and isinstance(call.args[0].value, str):
+        return call.args[0].value
+    return None
+
+
+def _extract_flask_methods(call: ast.Call) -> list[str]:
+    """Extract the methods list from a Flask @app.route(..., methods=[...]) call."""
+    for kw in call.keywords:
+        if kw.arg == "methods" and isinstance(kw.value, ast.List):
+            return [
+                elt.value.upper()
+                for elt in kw.value.elts
+                if isinstance(elt, ast.Constant) and isinstance(elt.value, str)
+            ]
+    return []
+
+
+def _parse_route_decorator(dec: ast.expr, handler_name: str) -> RouteInfo | None:
+    """Parse a FastAPI or Flask route decorator into a RouteInfo."""
+    if not isinstance(dec, ast.Call):
+        return None
+    func = dec.func
+    # FastAPI/router pattern: @app.get("/path") or @router.post("/path")
+    if isinstance(func, ast.Attribute):
+        method = func.attr.lower()
+        if method in _HTTP_METHODS:
+            path = _extract_first_string_arg(dec)
+            return RouteInfo(method=method.upper(), path=path or "/", handler_name=handler_name)
+        # Flask: @app.route("/path", methods=["GET", "POST"])
+        if method == "route":
+            path = _extract_first_string_arg(dec)
+            methods = _extract_flask_methods(dec)
+            # Create one RouteInfo per method (or GET if no methods specified)
+            if not methods:
+                methods = ["GET"]
+            for m in methods:
+                return RouteInfo(method=m, path=path or "/", handler_name=handler_name)
+    return None
+
+
+def _parse_django_path(node: ast.expr) -> RouteInfo | None:
+    """Parse a Django path() or re_path() call into a RouteInfo."""
+    if not isinstance(node, ast.Call):
+        return None
+    func_name = ""
+    if isinstance(node.func, ast.Name):
+        func_name = node.func.id
+    elif isinstance(node.func, ast.Attribute):
+        func_name = node.func.attr
+    if func_name not in ("path", "re_path", "url"):
+        return None
+    path_str = _extract_first_string_arg(node)
+    # Second arg is the view
+    handler_name = "unknown"
+    if len(node.args) >= 2:
+        view_arg = node.args[1]
+        if isinstance(view_arg, ast.Attribute):
+            handler_name = view_arg.attr
+        elif isinstance(view_arg, ast.Name):
+            handler_name = view_arg.id
+    return RouteInfo(method="ANY", path=path_str or "/", handler_name=handler_name)
+
+
+def _extract_django_routes(tree: ast.Module) -> list[RouteInfo]:
+    """Extract routes from Django urlpatterns = [path(...), ...] assignments."""
+    routes = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Assign):
+            for target in node.targets:
+                if isinstance(target, ast.Name) and target.id == "urlpatterns":
+                    if isinstance(node.value, ast.List):
+                        for elt in node.value.elts:
+                            route = _parse_django_path(elt)
+                            if route:
+                                routes.append(route)
+    return routes
 
 
 def _infer_type_simple(value_node: ast.expr | None) -> str:
@@ -379,18 +491,34 @@ class PythonAnalyzer:
         return classes
 
     def _extract_functions(self, tree: ast.Module) -> list[FunctionInfo]:
-        """Extract all module-level function definitions (not methods).
-
-        Stub — implemented in next task.
-        """
-        return []
+        """Extract all module-level function definitions (not methods)."""
+        functions = []
+        for node in tree.body:  # only top-level nodes
+            if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
+                params = _extract_params(node)
+                calls = _extract_calls(node)
+                functions.append(FunctionInfo(
+                    name=node.name,
+                    params=params,
+                    return_type=_annotation_to_str(node.returns),
+                    decorators=_decorator_names(node.decorator_list),
+                    is_async=isinstance(node, ast.AsyncFunctionDef),
+                    calls=calls,
+                ))
+        return functions
 
     def _extract_routes(self, tree: ast.Module) -> list[RouteInfo]:
-        """Extract HTTP route definitions from FastAPI/Flask/Django patterns.
-
-        Stub — implemented in next task.
-        """
-        return []
+        """Extract HTTP route definitions from FastAPI/Flask/Django patterns."""
+        routes = []
+        for node in ast.walk(tree):
+            if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
+                for dec in node.decorator_list:
+                    route = _parse_route_decorator(dec, node.name)
+                    if route:
+                        routes.append(route)
+        # Django urlpatterns handled separately
+        routes.extend(_extract_django_routes(tree))
+        return routes
 
     def _has_main_guard(self, tree: ast.Module) -> bool:
         """Return True if the module contains an if __name__ == '__main__' block."""
@@ -409,8 +537,20 @@ class PythonAnalyzer:
         return False
 
     def _resolve_calls(self, result: AnalysisResult) -> None:
-        """Resolve function call names to local project symbols where possible.
+        """Resolve function call names to local project symbols where possible."""
+        # Build a set of all known local function/method names
+        known_symbols: set[str] = set()
+        for fr in result.files_analyzed:
+            for fn in fr.functions:
+                known_symbols.add(fn.name)
+            for cls in fr.classes:
+                for method in cls.methods:
+                    known_symbols.add(f"{cls.name}.{method.name}")
 
-        Stub — implemented in next task.
-        """
-        pass
+        # Filter each call list to only keep locally-resolvable calls
+        for fr in result.files_analyzed:
+            for fn in fr.functions:
+                fn.calls = [c for c in fn.calls if c in known_symbols or "." in c]
+            for cls in fr.classes:
+                for method in cls.methods:
+                    method.calls = [c for c in method.calls if c in known_symbols or "." in c]
