@@ -65,7 +65,7 @@ def render(
 
     Loads the Jinja2 template from the package's templates/ directory.
     """
-    templates_dir = Path(__file__).parent.parent.parent / "templates"
+    templates_dir = Path(__file__).parent.parent / "templates"
     env = Environment(
         loader=FileSystemLoader(str(templates_dir)),
         autoescape=False,

@@ -58,3 +58,14 @@ def test_render_file_count():
     output = render(result, sections, project_name="API")
     assert "3 file(s)" in output
     assert "FastAPI" in output
+
+
+def test_render_skips_empty_mermaid():
+    result = AnalysisResult()
+    sections = [
+        DiagramSection(key="class_diagram", title="Class Diagram", description="", mermaid=""),
+    ]
+    output = render(result, sections, project_name="Empty")
+    assert "## Class Diagram" in output
+    # Empty mermaid should not produce a broken fence
+    assert "```mermaid\n\n```" not in output

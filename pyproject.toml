@@ -31,6 +31,9 @@ dev = [
 where = ["."]
 include = ["spartastruct*"]
 
+[tool.setuptools.package-data]
+spartastruct = ["templates/*.j2"]
+
 [tool.ruff]
 line-length = 100
 target-version = "py310"
