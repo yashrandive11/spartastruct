@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="assets/banner.svg" alt="SpartaStruct" width="800"/>
+  <img src="https://raw.githubusercontent.com/yashrandive11/spartastruct/main/assets/banner.svg" alt="SpartaStruct" width="800"/>
 
   <br/>
 
@@ -67,7 +67,7 @@ The LLM improves diagram labels, adds descriptions, and connects the dots betwee
 ## How It Works
 
 <div align="center">
-  <img src="assets/pipeline.svg" alt="SpartaStruct pipeline" width="760"/>
+  <img src="https://raw.githubusercontent.com/yashrandive11/spartastruct/main/assets/pipeline.svg" alt="SpartaStruct pipeline" width="760"/>
 </div>
 
 <br/>
