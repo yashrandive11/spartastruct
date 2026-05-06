@@ -18,7 +18,6 @@ _llm_failures: list[str] = []
 
 def get_llm_failures() -> list[str]:
     """Return and clear the accumulated LLM failure messages."""
-    global _llm_failures
     failures = _llm_failures[:]
     _llm_failures.clear()
     return failures
@@ -96,7 +95,7 @@ def _result_to_json(result: AnalysisResult) -> str:
         ],
         "files": [fr.path for fr in result.files_analyzed],
     }
-    return json.dumps(data, indent=2)
+    return json.dumps(data, separators=(",", ":"))
 
 
 def call_llm_for_diagram(
