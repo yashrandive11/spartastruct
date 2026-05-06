@@ -219,3 +219,26 @@ def test_module_graph_deduplicates_edges():
     out = module_graph.generate(result)
     edge_lines = [l.strip() for l in out.splitlines() if "-->" in l and "%%{" not in l]
     assert edge_lines.count("mod0 --> mod1") == 1
+
+
+def test_function_graph_respects_max_out_edges():
+    """Outgoing edges from a single node must be capped at _MAX_OUT_EDGES (8)."""
+    from spartastruct.analyzer.base import FileResult, FunctionInfo
+
+    # caller calls 12 distinct callees; all 12 also exist as functions in the
+    # same file so they all resolve to known node IDs — exercising the cap.
+    callee_names = [f"callee_{i}" for i in range(12)]
+    caller = FunctionInfo(name="caller", calls=callee_names)
+    callees = [FunctionInfo(name=name) for name in callee_names]
+    fr = FileResult(path="big.py", functions=[caller, *callees])
+    result = AnalysisResult(files_analyzed=[fr])
+    out = function_graph.generate(result)
+
+    # Identify the caller's node ID: it is the first fn* ID assigned (fn0).
+    caller_id = "fn0"
+    outgoing = [
+        line
+        for line in out.splitlines()
+        if line.startswith(f"    {caller_id} --> ")
+    ]
+    assert len(outgoing) <= 8
