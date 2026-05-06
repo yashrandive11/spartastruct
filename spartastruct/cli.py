@@ -160,6 +160,8 @@ def analyze(path: str, no_llm: bool, model: str | None, output: str | None, pdf:
                 title="[bold]SpartaStruct Analysis Complete[/bold]",
             )
         )
+    except click.ClickException:
+        raise
     except Exception as exc:
         console.print(f"[red]Error:[/red] {exc}")
         raise SystemExit(1)

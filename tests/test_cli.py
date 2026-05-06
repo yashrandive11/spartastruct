@@ -119,7 +119,7 @@ def test_analyze_pdf_flag_calls_mmdc(runner, tmp_path):
     ), patch(
         "spartastruct.renderer.pdf_exporter.subprocess.run",
         return_value=MagicMock(returncode=0),
-    ):
+    ) as mock_run:
         result = runner.invoke(
             main,
             ["analyze", PLAIN_DIR, "--no-llm", "--pdf", "--output", str(tmp_path / "out")],
@@ -127,6 +127,7 @@ def test_analyze_pdf_flag_calls_mmdc(runner, tmp_path):
 
     assert result.exit_code == 0, result.output
     assert "PDF" in result.output
+    assert mock_run.called
 
 
 def test_analyze_pdf_flag_missing_mmdc(runner, tmp_path):
