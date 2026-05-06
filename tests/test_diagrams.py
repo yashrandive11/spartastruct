@@ -223,6 +223,8 @@ def test_module_graph_deduplicates_edges():
 
 def test_function_graph_respects_max_out_edges():
     """Outgoing edges from a single node must be capped at _MAX_OUT_EDGES (8)."""
+    import re
+
     from spartastruct.analyzer.base import FileResult, FunctionInfo
 
     # caller calls 12 distinct callees; all 12 also exist as functions in the
@@ -234,11 +236,53 @@ def test_function_graph_respects_max_out_edges():
     result = AnalysisResult(files_analyzed=[fr])
     out = function_graph.generate(result)
 
-    # Identify the caller's node ID: it is the first fn* ID assigned (fn0).
-    caller_id = "fn0"
-    outgoing = [
-        line
-        for line in out.splitlines()
-        if line.startswith(f"    {caller_id} --> ")
+    # Find the caller's node ID dynamically by locating its label in the output.
+    caller_id = None
+    for line in out.split("\n"):
+        m = re.search(r'(fn\d+)\["caller\(\)"', line)
+        if m:
+            caller_id = m.group(1)
+            break
+    assert caller_id is not None, "caller node not found in output"
+    outgoing = [line for line in out.split("\n") if re.match(rf"    {caller_id} -->", line)]
+    assert len(outgoing) == 8
+
+
+def test_function_graph_cap_applies_to_methods():
+    """_MAX_OUT_EDGES cap must also apply to class methods."""
+    import re
+
+    from spartastruct.analyzer.base import ClassInfo, FileResult, MethodInfo
+
+    # Build a class with a 'caller' method that calls 12 distinct 'callee_N' methods.
+    # For method-to-method resolution, calls must use the qualified "ClassName.method"
+    # key because function_graph looks up callee via node_ids.get(call).
+    callee_methods = [
+        MethodInfo(name=f"callee_{i}", is_async=False, calls=[], decorators=[])
+        for i in range(12)
     ]
-    assert len(outgoing) <= 8
+    caller_method = MethodInfo(
+        name="caller",
+        is_async=False,
+        calls=[f"MyService.callee_{i}" for i in range(12)],
+        decorators=[],
+    )
+    cls = ClassInfo(
+        name="MyService",
+        bases=[],
+        methods=[caller_method] + callee_methods,
+    )
+    fr = FileResult(path="service.py", functions=[], classes=[cls])
+    result = AnalysisResult(files_analyzed=[fr])
+    out = function_graph.generate(result)
+
+    # Find the caller method's node ID dynamically.
+    caller_id = None
+    for line in out.split("\n"):
+        m = re.search(r'(fn\d+)\["MyService\.caller\(\)"', line)
+        if m:
+            caller_id = m.group(1)
+            break
+    assert caller_id is not None, "caller method node not found"
+    outgoing = [line for line in out.split("\n") if re.match(rf"    {caller_id} -->", line)]
+    assert len(outgoing) == 8
