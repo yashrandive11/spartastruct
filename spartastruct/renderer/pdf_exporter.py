@@ -30,6 +30,7 @@ def export_diagram_pdf(
 
     Raises:
         subprocess.CalledProcessError: if mmdc exits non-zero.
+        Note: mmdc's stderr is available on the CalledProcessError as `.stderr`.
     """
     out_file = out_dir / f"{section.key}.pdf"
 
@@ -66,10 +67,12 @@ def export_all_pdfs(
 
     Returns:
         List of Paths to created PDF files.
+
+    Stops on the first mmdc failure — partial results are not returned.
     """
     results = []
     for section in sections:
-        if not section.mermaid:
+        if not section.mermaid.strip():
             continue
         if progress_callback:
             progress_callback(f"Exporting {section.title} to PDF…")
