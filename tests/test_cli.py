@@ -63,7 +63,10 @@ def test_analyze_creates_output_dir(runner, tmp_path):
     assert (out / "ARCHITECTURE.md").exists()
 
 
-def test_config_show(runner):
+def test_config_show(runner, tmp_path, monkeypatch):
+    import spartastruct.config as cfg_mod
+    monkeypatch.setattr(cfg_mod, "CONFIG_DIR", tmp_path / ".spartastruct")
+    monkeypatch.setattr(cfg_mod, "CONFIG_FILE", tmp_path / ".spartastruct" / "config.toml")
     result = runner.invoke(main, ["config", "--show"])
     assert result.exit_code == 0
     assert "Model:" in result.output
