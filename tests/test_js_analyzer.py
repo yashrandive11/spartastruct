@@ -4,8 +4,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from spartastruct.analyzer.base import AnalysisResult, FileResult, ImportInfo
 from spartastruct.analyzer.js_analyzer import JsAnalyzer
 from spartastruct.utils.file_walker import SUPPORTED_EXTENSIONS, walk_project
+from spartastruct.utils.framework_detector import detect_frameworks
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -209,3 +211,43 @@ export class UsersController {
     assert "GET" in methods
     assert "POST" in methods
     assert "DELETE" in methods
+
+
+def test_framework_detector_finds_express(tmp_path):
+    fr = FileResult(
+        path="index.js",
+        imports=ImportInfo(third_party=["express"], local=[]),
+    )
+    result = AnalysisResult(files_analyzed=[fr])
+    frameworks = detect_frameworks(result)
+    assert "Express" in frameworks
+
+
+def test_framework_detector_finds_nestjs():
+    fr = FileResult(
+        path="app.module.ts",
+        imports=ImportInfo(third_party=["@nestjs/common", "@nestjs/core"], local=[]),
+    )
+    result = AnalysisResult(files_analyzed=[fr])
+    frameworks = detect_frameworks(result)
+    assert "NestJS" in frameworks
+
+
+def test_framework_detector_finds_nextjs():
+    fr = FileResult(
+        path="pages/index.tsx",
+        imports=ImportInfo(third_party=["next", "next/router"], local=[]),
+    )
+    result = AnalysisResult(files_analyzed=[fr])
+    frameworks = detect_frameworks(result)
+    assert "Next.js" in frameworks
+
+
+def test_framework_detector_finds_react():
+    fr = FileResult(
+        path="App.tsx",
+        imports=ImportInfo(third_party=["react", "react-dom"], local=[]),
+    )
+    result = AnalysisResult(files_analyzed=[fr])
+    frameworks = detect_frameworks(result)
+    assert "React" in frameworks
