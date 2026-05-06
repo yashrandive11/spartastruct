@@ -48,12 +48,17 @@ def export_diagram_pdf(
         cfg_path = cfg.name
 
     try:
-        subprocess.run(
+        proc = subprocess.run(
             [mmdc_path, "-i", mmd_path, "-o", str(out_file), "--configFile", cfg_path],
-            check=True,
+            check=False,
             capture_output=True,
             text=True,
         )
+        if proc.returncode != 0:
+            detail = (proc.stderr or proc.stdout or "no output").strip()
+            raise RuntimeError(
+                f"mmdc failed (exit {proc.returncode}) while exporting {section.key}:\n{detail}"
+            )
     finally:
         Path(mmd_path).unlink(missing_ok=True)
         Path(cfg_path).unlink(missing_ok=True)
@@ -111,7 +116,7 @@ def export_diagram_png(
         cfg_path = cfg.name
 
     try:
-        subprocess.run(
+        proc = subprocess.run(
             [
                 mmdc_path,
                 "-i", mmd_path,
@@ -120,10 +125,15 @@ def export_diagram_png(
                 "--scale", str(scale),
                 "--configFile", cfg_path,
             ],
-            check=True,
+            check=False,
             capture_output=True,
             text=True,
         )
+        if proc.returncode != 0:
+            detail = (proc.stderr or proc.stdout or "no output").strip()
+            raise RuntimeError(
+                f"mmdc failed (exit {proc.returncode}) while exporting {section.key}:\n{detail}"
+            )
     finally:
         Path(mmd_path).unlink(missing_ok=True)
         Path(cfg_path).unlink(missing_ok=True)
