@@ -201,3 +201,37 @@ def test_export_all_pngs_returns_paths(tmp_path):
         results = export_all_pngs(sections, tmp_path, "/usr/bin/mmdc")
     keys = {r.stem for r in results}
     assert keys == {"x", "y"}
+
+
+def test_export_diagram_png_cleans_up_temp_file_on_failure(tmp_path):
+    import subprocess
+
+    section = DiagramSection(
+        key="class_diagram",
+        title="Class Diagram",
+        description="",
+        mermaid="classDiagram\n  class Foo",
+    )
+    with patch(
+        "spartastruct.renderer.pdf_exporter.subprocess.run",
+        side_effect=subprocess.CalledProcessError(1, "mmdc"),
+    ):
+        with pytest.raises(subprocess.CalledProcessError):
+            export_diagram_png(section, tmp_path, "/usr/bin/mmdc")
+    # No .mmd temp files should remain
+    assert list(tmp_path.glob("*.mmd")) == []
+
+
+def test_export_diagram_png_writes_mermaid_to_temp_file(tmp_path):
+    section = DiagramSection(key="mod", title="Module", description="", mermaid="graph TD\n  A-->B")
+    written_content = []
+
+    def capture_run(cmd, **kwargs):
+        mmd_path = cmd[2]  # -i <path>
+        written_content.append(Path(mmd_path).read_text())
+        return MagicMock(returncode=0)
+
+    with patch("spartastruct.renderer.pdf_exporter.subprocess.run", side_effect=capture_run):
+        export_diagram_png(section, tmp_path, "/usr/bin/mmdc")
+
+    assert written_content == ["graph TD\n  A-->B"]
