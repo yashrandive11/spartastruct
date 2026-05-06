@@ -297,6 +297,22 @@ spartastruct analyze /path/to/project
 
 ---
 
+## Supported Languages
+
+SpartaStruct auto-detects your project's primary language and picks the right analyzer. For polyglot projects (e.g. a Python API with a TypeScript frontend in the same repo), both analyzers run and results are merged into a single set of diagrams.
+
+| Language | Extensions | Analyzer |
+|----------|-----------|---------|
+| Python | `.py` | AST-based — classes, functions, routes, ORM models, imports |
+| JavaScript | `.js`, `.jsx` | Regex-based — classes, functions, Express routes, imports |
+| TypeScript | `.ts`, `.tsx` | Regex-based — classes, interfaces, functions, NestJS routes, imports |
+
+**Detected JS/TS frameworks:** Express, NestJS, Next.js, React, Vue, Angular, Nuxt, TypeORM, Sequelize, Mongoose, Prisma, GraphQL, Apollo, Socket.IO, Axios, Jest, Vitest, RxJS
+
+**How auto-detection works:** SpartaStruct counts `.py` vs JS/TS files in your project. Python-only → Python analyzer. JS/TS-only → JS/TS analyzer. Both present → both analyzers run and results are merged.
+
+---
+
 ## Supported Frameworks
 
 SpartaStruct auto-detects which frameworks your project uses and includes that in the analysis.
