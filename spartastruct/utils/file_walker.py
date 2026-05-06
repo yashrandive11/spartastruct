@@ -2,28 +2,29 @@
 
 from __future__ import annotations
 
-import sys
 from pathlib import Path
 
 # Directories to skip during recursive walk
-SKIP_DIRS = frozenset({
-    "__pycache__",
-    ".git",
-    "venv",
-    ".venv",
-    "env",
-    ".env",
-    "node_modules",
-    "dist",
-    "build",
-    "eggs",
-    ".eggs",
-    ".tox",
-    ".pytest_cache",
-    ".mypy_cache",
-    ".ruff_cache",
-    "spartadocs",
-})
+SKIP_DIRS = frozenset(
+    {
+        "__pycache__",
+        ".git",
+        "venv",
+        ".venv",
+        "env",
+        ".env",
+        "node_modules",
+        "dist",
+        "build",
+        "eggs",
+        ".eggs",
+        ".tox",
+        ".pytest_cache",
+        ".mypy_cache",
+        ".ruff_cache",
+        "spartadocs",
+    }
+)
 
 # Files larger than this are skipped with a warning
 MAX_FILE_SIZE_BYTES = 500 * 1024  # 500 KB
@@ -70,9 +71,7 @@ def walk_project(root: Path) -> tuple[list[Path], list[str]]:
             size = item.stat().st_size
             if size > MAX_FILE_SIZE_BYTES:
                 rel = item.relative_to(root)
-                warnings.append(
-                    f"Skipped (too large, {size // 1024}KB > 500KB): {rel}"
-                )
+                warnings.append(f"Skipped (too large, {size // 1024}KB > 500KB): {rel}")
             else:
                 py_files.append(item)
 

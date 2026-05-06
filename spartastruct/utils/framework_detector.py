@@ -52,9 +52,7 @@ def detect_frameworks(result: AnalysisResult) -> list[str]:
     detected: set[str] = set()
 
     for file_result in result.files_analyzed:
-        all_imports = (
-            file_result.imports.third_party + file_result.imports.local
-        )
+        all_imports = file_result.imports.third_party + file_result.imports.local
         for imp in all_imports:
             root = imp.split(".")[0].lower()
             if root in FRAMEWORK_IMPORT_MAP:

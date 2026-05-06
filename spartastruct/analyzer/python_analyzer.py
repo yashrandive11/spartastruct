@@ -141,21 +141,25 @@ def _extract_class(class_node: ast.ClassDef, file_imports: ImportInfo) -> ClassI
         if isinstance(item, ast.AnnAssign) and isinstance(item.target, ast.Name):
             name = item.target.id
             type_str = _annotation_to_str(item.annotation)
-            attributes.append(AttributeInfo(
-                name=name,
-                type=type_str,
-                visibility=_visibility(name),
-            ))
+            attributes.append(
+                AttributeInfo(
+                    name=name,
+                    type=type_str,
+                    visibility=_visibility(name),
+                )
+            )
         # Plain assignments at class level (e.g. ORM Column definitions)
         elif isinstance(item, ast.Assign):
             for target in item.targets:
                 if isinstance(target, ast.Name):
                     type_str = _infer_type_simple(item.value)
-                    attributes.append(AttributeInfo(
-                        name=target.id,
-                        type=type_str,
-                        visibility=_visibility(target.id),
-                    ))
+                    attributes.append(
+                        AttributeInfo(
+                            name=target.id,
+                            type=type_str,
+                            visibility=_visibility(target.id),
+                        )
+                    )
         elif isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)):
             methods.append(_extract_method(item))
             # Also extract annotated self.x assignments from __init__
@@ -170,11 +174,13 @@ def _extract_class(class_node: ast.ClassDef, file_imports: ImportInfo) -> ClassI
                         name = stmt.target.attr
                         type_str = _annotation_to_str(stmt.annotation)
                         if not any(a.name == name for a in attributes):
-                            attributes.append(AttributeInfo(
-                                name=name,
-                                type=type_str,
-                                visibility=_visibility(name),
-                            ))
+                            attributes.append(
+                                AttributeInfo(
+                                    name=name,
+                                    type=type_str,
+                                    visibility=_visibility(name),
+                                )
+                            )
 
     # Check for abstractmethod usage
     if any("abstractmethod" in m.decorators for m in methods):
@@ -364,8 +370,14 @@ def _infer_type_astroid(file_path: Path, lineno: int, name: str) -> str:
 def _detect_entry_points(file_result: FileResult, filename: str) -> bool:
     """Return True if this file appears to be a project entry point."""
     entry_names = {
-        "main.py", "app.py", "run.py", "server.py",
-        "manage.py", "wsgi.py", "asgi.py", "__main__.py",
+        "main.py",
+        "app.py",
+        "run.py",
+        "server.py",
+        "manage.py",
+        "wsgi.py",
+        "asgi.py",
+        "__main__.py",
     }
     return Path(filename).name in entry_names
 
@@ -434,6 +446,7 @@ class PythonAnalyzer:
 
         # Post-process: detect frameworks and resolve function calls
         from spartastruct.utils.framework_detector import detect_frameworks  # noqa: PLC0415
+
         analysis.frameworks = detect_frameworks(analysis)
 
         self._resolve_calls(analysis)
@@ -446,11 +459,17 @@ class PythonAnalyzer:
             source = file_path.read_text(encoding="utf-8", errors="replace")
             tree = ast.parse(source, filename=str(file_path))
         except SyntaxError as exc:
-            rel = file_path.relative_to(self._root) if file_path.is_relative_to(self._root) else file_path
+            try:
+                rel = file_path.relative_to(self._root)
+            except ValueError:
+                rel = file_path
             warnings.append(f"Parse error in {rel}: {exc}")
             return None
         except Exception as exc:  # noqa: BLE001
-            rel = file_path.relative_to(self._root) if file_path.is_relative_to(self._root) else file_path
+            try:
+                rel = file_path.relative_to(self._root)
+            except ValueError:
+                rel = file_path
             warnings.append(f"Failed to read {rel}: {exc}")
             return None
 
@@ -497,14 +516,16 @@ class PythonAnalyzer:
             if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
                 params = _extract_params(node)
                 calls = _extract_calls(node)
-                functions.append(FunctionInfo(
-                    name=node.name,
-                    params=params,
-                    return_type=_annotation_to_str(node.returns),
-                    decorators=_decorator_names(node.decorator_list),
-                    is_async=isinstance(node, ast.AsyncFunctionDef),
-                    calls=calls,
-                ))
+                functions.append(
+                    FunctionInfo(
+                        name=node.name,
+                        params=params,
+                        return_type=_annotation_to_str(node.returns),
+                        decorators=_decorator_names(node.decorator_list),
+                        is_async=isinstance(node, ast.AsyncFunctionDef),
+                        calls=calls,
+                    )
+                )
         return functions
 
     def _extract_routes(self, tree: ast.Module) -> list[RouteInfo]:

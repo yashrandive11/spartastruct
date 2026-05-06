@@ -28,7 +28,12 @@ def test_make_sections_with_llm():
 def test_render_contains_headings():
     result = AnalysisResult(files_analyzed=[FileResult(path="main.py")])
     sections = [
-        DiagramSection(key="class_diagram", title="Class Diagram", description="", mermaid="classDiagram"),
+        DiagramSection(
+            key="class_diagram",
+            title="Class Diagram",
+            description="",
+            mermaid="classDiagram",
+        ),
     ]
     output = render(result, sections, project_name="MyApp")
     assert "# MyApp" in output

@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
-from spartastruct.llm.client import _parse_llm_response, get_llm_failures, call_llm
+from spartastruct.llm.client import _parse_llm_response, call_llm, get_llm_failures
 
 
 def test_parse_llm_response_extracts_mermaid():

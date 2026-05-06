@@ -25,8 +25,7 @@ def generate(result: AnalysisResult) -> str:
 
     # Count total functions
     all_fn_count = sum(
-        len(fr.functions) + sum(len(c.methods) for c in fr.classes)
-        for fr in result.files_analyzed
+        len(fr.functions) + sum(len(c.methods) for c in fr.classes) for fr in result.files_analyzed
     )
     truncated = all_fn_count > _MAX_FUNCTIONS
 
@@ -53,7 +52,7 @@ def generate(result: AnalysisResult) -> str:
     for fr in result.files_analyzed:
         stem = Path(fr.path).stem
         subgraph_id = _safe_id(stem)
-        lines.append(f"    subgraph {subgraph_id}[\"{fr.path}\"]")
+        lines.append(f'    subgraph {subgraph_id}["{fr.path}"]')
 
         is_entry_file = fr.path in entry_files
 
@@ -61,7 +60,7 @@ def generate(result: AnalysisResult) -> str:
             qname = f"{stem}.{fn.name}"
             nid = make_id(qname)
             label = ("async " if fn.is_async else "") + f"{fn.name}()"
-            lines.append(f"        {nid}[\"{label}\"]")
+            lines.append(f'        {nid}["{label}"]')
             if fn.is_async:
                 lines.append(f"        {nid}:::async")
             if is_entry_file or fn.name in ("main", "run", "start"):
@@ -72,7 +71,7 @@ def generate(result: AnalysisResult) -> str:
                 qname = f"{cls.name}.{method.name}"
                 nid = make_id(qname)
                 label = ("async " if method.is_async else "") + f"{cls.name}.{method.name}()"
-                lines.append(f"        {nid}[\"{label}\"]")
+                lines.append(f'        {nid}["{label}"]')
                 if method.is_async:
                     lines.append(f"        {nid}:::async")
 
@@ -89,7 +88,7 @@ def generate(result: AnalysisResult) -> str:
                 callee_id = node_ids.get(call) or node_ids.get(f"{stem}.{call}")
                 if callee_id:
                     edge_label = "async call" if fn.is_async else "call"
-                    lines.append(f"    {caller_id} -->|\"{edge_label}\"| {callee_id}")
+                    lines.append(f'    {caller_id} -->|"{edge_label}"| {callee_id}')
 
         for cls in fr.classes:
             for method in cls.methods:
@@ -99,7 +98,7 @@ def generate(result: AnalysisResult) -> str:
                 for call in method.calls:
                     callee_id = node_ids.get(call)
                     if callee_id:
-                        lines.append(f"    {caller_id} -->|\"call\"| {callee_id}")
+                        lines.append(f'    {caller_id} -->|"call"| {callee_id}')
 
     return "\n".join(lines)
 

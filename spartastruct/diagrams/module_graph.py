@@ -56,7 +56,7 @@ def generate(result: AnalysisResult) -> str:
     for directory, files in dir_groups.items():
         dir_label = directory if directory != "." else "root"
         sg_id = _safe_id(dir_label)
-        lines.append(f"    subgraph {sg_id}[\"{dir_label}\"]")
+        lines.append(f'    subgraph {sg_id}["{dir_label}"]')
         for file_path in files:
             nid = node_ids[file_path]
             stem = Path(file_path).name
@@ -75,8 +75,6 @@ def generate(result: AnalysisResult) -> str:
         lines.append("    end")
 
     # Edges: local imports
-    path_to_fr = {fr.path: fr for fr in result.files_analyzed}
-
     for fr in result.files_analyzed:
         src_id = node_ids[fr.path]
         for local_imp in fr.imports.local:
@@ -84,7 +82,8 @@ def generate(result: AnalysisResult) -> str:
             imp_root = local_imp.split(".")[0]
             for other_path in node_ids:
                 other_stem = Path(other_path).stem
-                if other_stem == imp_root or other_path.replace("/", ".").replace(".py", "") == local_imp:
+                normalized_path = other_path.replace("/", ".").replace(".py", "")
+                if other_stem == imp_root or normalized_path == local_imp:
                     dst_id = node_ids[other_path]
                     if src_id != dst_id:
                         lines.append(f"    {src_id} --> {dst_id}")

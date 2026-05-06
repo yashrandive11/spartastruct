@@ -27,11 +27,16 @@ def test_main_help(runner):
 
 
 def test_analyze_no_llm_plain(runner, tmp_path):
-    result = runner.invoke(main, [
-        "analyze", PLAIN_DIR,
-        "--no-llm",
-        "--output", str(tmp_path / "out"),
-    ])
+    result = runner.invoke(
+        main,
+        [
+            "analyze",
+            PLAIN_DIR,
+            "--no-llm",
+            "--output",
+            str(tmp_path / "out"),
+        ],
+    )
     assert result.exit_code == 0, result.output
     out_file = tmp_path / "out" / "ARCHITECTURE.md"
     assert out_file.exists()
@@ -41,11 +46,16 @@ def test_analyze_no_llm_plain(runner, tmp_path):
 
 
 def test_analyze_no_llm_fastapi(runner, tmp_path):
-    result = runner.invoke(main, [
-        "analyze", FASTAPI_DIR,
-        "--no-llm",
-        "--output", str(tmp_path / "out"),
-    ])
+    result = runner.invoke(
+        main,
+        [
+            "analyze",
+            FASTAPI_DIR,
+            "--no-llm",
+            "--output",
+            str(tmp_path / "out"),
+        ],
+    )
     assert result.exit_code == 0, result.output
     content = (tmp_path / "out" / "ARCHITECTURE.md").read_text()
     assert "## Entity Relationship Diagram" in content
@@ -54,17 +64,23 @@ def test_analyze_no_llm_fastapi(runner, tmp_path):
 
 def test_analyze_creates_output_dir(runner, tmp_path):
     out = tmp_path / "nested" / "docs"
-    result = runner.invoke(main, [
-        "analyze", PLAIN_DIR,
-        "--no-llm",
-        "--output", str(out),
-    ])
+    result = runner.invoke(
+        main,
+        [
+            "analyze",
+            PLAIN_DIR,
+            "--no-llm",
+            "--output",
+            str(out),
+        ],
+    )
     assert result.exit_code == 0, result.output
     assert (out / "ARCHITECTURE.md").exists()
 
 
 def test_config_show(runner, tmp_path, monkeypatch):
     import spartastruct.config as cfg_mod
+
     monkeypatch.setattr(cfg_mod, "CONFIG_DIR", tmp_path / ".spartastruct")
     monkeypatch.setattr(cfg_mod, "CONFIG_FILE", tmp_path / ".spartastruct" / "config.toml")
     result = runner.invoke(main, ["config", "--show"])
@@ -74,6 +90,7 @@ def test_config_show(runner, tmp_path, monkeypatch):
 
 def test_init_creates_config(runner, tmp_path, monkeypatch):
     import spartastruct.config as cfg_mod
+
     monkeypatch.setattr(cfg_mod, "CONFIG_DIR", tmp_path / ".spartastruct")
     monkeypatch.setattr(cfg_mod, "CONFIG_FILE", tmp_path / ".spartastruct" / "config.toml")
     result = runner.invoke(main, ["init"])
@@ -83,6 +100,7 @@ def test_init_creates_config(runner, tmp_path, monkeypatch):
 
 def test_config_update_model(runner, tmp_path, monkeypatch):
     import spartastruct.config as cfg_mod
+
     monkeypatch.setattr(cfg_mod, "CONFIG_DIR", tmp_path / ".spartastruct")
     monkeypatch.setattr(cfg_mod, "CONFIG_FILE", tmp_path / ".spartastruct" / "config.toml")
     result = runner.invoke(main, ["config", "--model", "openai/gpt-4o"])

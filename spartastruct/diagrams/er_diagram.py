@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from spartastruct.analyzer.base import AnalysisResult, ClassInfo
+from spartastruct.analyzer.base import AnalysisResult
 
 # SQLAlchemy/Django type → SQL type mapping
 _TYPE_MAP = {
@@ -48,7 +48,8 @@ def generate(result: AnalysisResult) -> str:
     for model in models:
         lines.append(f"    {model.name} {{")
         for attr in model.attributes:
-            sql_type = _TYPE_MAP.get(attr.type, attr.type.lower() if attr.type != "Any" else "string")
+            default_type = attr.type.lower() if attr.type != "Any" else "string"
+            sql_type = _TYPE_MAP.get(attr.type, default_type)
             marker = ""
             if attr.name in _PK_NAMES or attr.name.endswith("_id") and attr.name == "id":
                 marker = " PK"

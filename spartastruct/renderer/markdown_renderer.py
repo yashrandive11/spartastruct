@@ -12,10 +12,10 @@ from spartastruct.analyzer.base import AnalysisResult
 
 @dataclass
 class DiagramSection:
-    key: str            # "class_diagram", "er_diagram", etc.
-    title: str          # "Class Diagram"
-    description: str    # from LLM or ""
-    mermaid: str        # Mermaid source (no fences)
+    key: str  # "class_diagram", "er_diagram", etc.
+    title: str  # "Class Diagram"
+    description: str  # from LLM or ""
+    mermaid: str  # Mermaid source (no fences)
 
 
 _DIAGRAM_TITLES: dict[str, str] = {
@@ -27,7 +27,14 @@ _DIAGRAM_TITLES: dict[str, str] = {
     "module_graph": "Module Dependency Graph",
 }
 
-_DIAGRAM_ORDER = ["class_diagram", "er_diagram", "dfd", "flowchart", "function_graph", "module_graph"]
+_DIAGRAM_ORDER = [
+    "class_diagram",
+    "er_diagram",
+    "dfd",
+    "flowchart",
+    "function_graph",
+    "module_graph",
+]
 
 
 def make_sections(
@@ -47,12 +54,14 @@ def make_sections(
             description, mermaid = llm_results[key]
         else:
             description, mermaid = "", static
-        sections.append(DiagramSection(
-            key=key,
-            title=_DIAGRAM_TITLES[key],
-            description=description,
-            mermaid=mermaid,
-        ))
+        sections.append(
+            DiagramSection(
+                key=key,
+                title=_DIAGRAM_TITLES[key],
+                description=description,
+                mermaid=mermaid,
+            )
+        )
     return sections
 
 

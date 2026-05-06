@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from spartastruct.analyzer.base import AnalysisResult, ClassInfo
+from spartastruct.analyzer.base import AnalysisResult
 
 _VIS_PREFIX = {"public": "+", "protected": "#", "private": "-"}
 
@@ -25,9 +25,9 @@ def generate(result: AnalysisResult) -> str:
     for cls in classes:
         lines.append(f"    class {_safe_name(cls.name)} {{")
         if cls.is_abstract:
-            lines.append(f"        <<abstract>>")
+            lines.append("        <<abstract>>")
         elif cls.is_dataclass:
-            lines.append(f"        <<dataclass>>")
+            lines.append("        <<dataclass>>")
         elif cls.orm_type:
             lines.append(f"        <<{cls.orm_type}>>")
 
@@ -38,8 +38,7 @@ def generate(result: AnalysisResult) -> str:
         for method in cls.methods:
             prefix = _VIS_PREFIX.get(method.visibility, "+")
             params_str = ", ".join(
-                f"{p.name}: {p.type}" if p.type != "Any" else p.name
-                for p in method.params
+                f"{p.name}: {p.type}" if p.type != "Any" else p.name for p in method.params
             )
             ret = f" {method.return_type}" if method.return_type not in ("None", "Any", "") else ""
             async_prefix = "async " if method.is_async else ""

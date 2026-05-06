@@ -37,6 +37,7 @@ def django_result():
 
 # --- Class extraction ---
 
+
 def test_class_names_extracted(plain_result):
     names = {c.name for c in plain_result.all_classes}
     assert {"Shape", "Circle", "Rectangle", "ShapeRegistry"}.issubset(names)
@@ -72,6 +73,7 @@ def test_method_extraction(plain_result):
 
 # --- Function extraction ---
 
+
 def test_module_functions_extracted(plain_result):
     fn_names = {f.name for f in plain_result.all_functions}
     # utils.py has create_default_shapes, scale_shape_area, format_area, summarize_registry
@@ -81,14 +83,14 @@ def test_module_functions_extracted(plain_result):
 
 def test_async_function_detection(fastapi_result):
     fn_names_async = {
-        f.name for fr in fastapi_result.files_analyzed
-        for f in fr.functions if f.is_async
+        f.name for fr in fastapi_result.files_analyzed for f in fr.functions if f.is_async
     }
     # health_check is async in main.py
     assert "health_check" in fn_names_async
 
 
 # --- Import classification ---
+
 
 def test_stdlib_imports_classified(plain_result):
     all_stdlib = [imp for fr in plain_result.files_analyzed for imp in fr.imports.stdlib]
@@ -106,6 +108,7 @@ def test_third_party_imports_classified(fastapi_result):
 
 
 # --- ORM detection ---
+
 
 def test_sqlalchemy_orm_detected(fastapi_result):
     orm_names = {c.name for c in fastapi_result.orm_models}
@@ -128,6 +131,7 @@ def test_django_orm_type(django_result):
 
 
 # --- Route extraction ---
+
 
 def test_fastapi_routes_extracted(fastapi_result):
     all_routes = fastapi_result.all_routes
@@ -154,6 +158,7 @@ def test_django_route_handlers(django_result):
 
 # --- Entry point detection ---
 
+
 def test_entry_point_detected_by_filename(plain_result):
     assert any("main.py" in ep for ep in plain_result.entry_points)
 
@@ -163,6 +168,7 @@ def test_entry_point_detected_by_filename_django(django_result):
 
 
 # --- Framework detection ---
+
 
 def test_frameworks_detected(fastapi_result):
     assert "FastAPI" in fastapi_result.frameworks

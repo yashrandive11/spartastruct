@@ -8,14 +8,6 @@ import pytest
 
 from spartastruct.analyzer.base import (
     AnalysisResult,
-    AttributeInfo,
-    ClassInfo,
-    FileResult,
-    FunctionInfo,
-    ImportInfo,
-    MethodInfo,
-    ParamInfo,
-    RouteInfo,
 )
 from spartastruct.analyzer.python_analyzer import PythonAnalyzer
 from spartastruct.diagrams import (
@@ -51,6 +43,7 @@ def fastapi_result():
 
 # --- Class Diagram ---
 
+
 def test_class_diagram_starts_with_header(plain_result):
     output = class_diagram.generate(plain_result)
     assert output.startswith("classDiagram")
@@ -85,6 +78,7 @@ def test_class_diagram_inheritance(plain_result):
 
 # --- ER Diagram ---
 
+
 def test_er_diagram_starts_with_header(fastapi_result):
     output = er_diagram.generate(fastapi_result)
     assert output.startswith("erDiagram")
@@ -104,6 +98,7 @@ def test_er_diagram_empty_state(empty_result):
 
 # --- DFD ---
 
+
 def test_dfd_starts_with_header(fastapi_result):
     output = dfd.generate(fastapi_result)
     assert output.startswith("flowchart LR")
@@ -121,6 +116,7 @@ def test_dfd_empty_fallback(empty_result):
 
 
 # --- Flowchart ---
+
 
 def test_flowchart_starts_with_header(fastapi_result):
     output = flowchart.generate(fastapi_result)
@@ -145,6 +141,7 @@ def test_flowchart_web_lifecycle(fastapi_result):
 
 # --- Function Graph ---
 
+
 def test_function_graph_starts_with_header(plain_result):
     output = function_graph.generate(plain_result)
     assert output.startswith("graph LR")
@@ -161,6 +158,7 @@ def test_function_graph_empty(empty_result):
 
 
 # --- Module Graph ---
+
 
 def test_module_graph_starts_with_header(plain_result):
     output = module_graph.generate(plain_result)

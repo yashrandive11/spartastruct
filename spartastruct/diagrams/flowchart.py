@@ -32,13 +32,13 @@ def generate(result: AnalysisResult) -> str:
 
     if is_web:
         lines.append('    Init["Initialize App / Load Config"]')
-        lines.append('    Start --> Init')
+        lines.append("    Start --> Init")
         lines.append('    Server["Start Server / Bind Port"]')
-        lines.append('    Init --> Server')
+        lines.append("    Init --> Server")
         lines.append('    Request["Receive HTTP Request"]')
-        lines.append('    Server --> Request')
+        lines.append("    Server --> Request")
         lines.append('    Routing{"Route Match?"}')
-        lines.append('    Request --> Routing')
+        lines.append("    Request --> Routing")
 
         if routes:
             for i, route in enumerate(routes[:5]):
@@ -49,16 +49,16 @@ def generate(result: AnalysisResult) -> str:
             lines.append('    handler_0 --> Response["Return Response"]')
         else:
             lines.append('    Handler["Route Handler"]')
-            lines.append('    Routing -->|yes| Handler')
+            lines.append("    Routing -->|yes| Handler")
             lines.append('    Handler --> Response["Return Response"]')
 
         lines.append('    Routing -->|no| NotFound["404 Not Found"]')
         lines.append('    Response --> End(["End"])')
-        lines.append('    NotFound --> End')
+        lines.append("    NotFound --> End")
     else:
         # Plain Python entry point flow
         lines.append('    Main["Main Function / Script Body"]')
-        lines.append('    Start --> Main')
+        lines.append("    Start --> Main")
 
         # Show top-level functions from entry file as steps
         entry_funcs = []

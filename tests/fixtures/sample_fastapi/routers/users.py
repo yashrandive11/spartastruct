@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException
-
 from services.user_service import UserService
 
 router = APIRouter()

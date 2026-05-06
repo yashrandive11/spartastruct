@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from fastapi import FastAPI
-
 from routers import users
 
 app = FastAPI(title="Sample API", version="1.0.0")

@@ -14,6 +14,7 @@ class Author(models.Model):
 
     class Meta:
         """Model metadata."""
+
         ordering = ["name"]
 
     def __str__(self) -> str:
