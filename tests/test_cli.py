@@ -107,3 +107,51 @@ def test_config_update_model(runner, tmp_path, monkeypatch):
     assert result.exit_code == 0
     cfg = cfg_mod.load_config()
     assert cfg.model == "openai/gpt-4o"
+
+
+def test_analyze_pdf_flag_calls_mmdc(runner, tmp_path):
+    """--pdf flag triggers mmdc export for each non-empty diagram."""
+    from unittest.mock import MagicMock, patch
+
+    with patch(
+        "spartastruct.renderer.pdf_exporter.shutil.which",
+        return_value="/usr/local/bin/mmdc",
+    ), patch(
+        "spartastruct.renderer.pdf_exporter.subprocess.run",
+        return_value=MagicMock(returncode=0),
+    ):
+        result = runner.invoke(
+            main,
+            ["analyze", PLAIN_DIR, "--no-llm", "--pdf", "--output", str(tmp_path / "out")],
+        )
+
+    assert result.exit_code == 0, result.output
+    assert "PDF" in result.output
+
+
+def test_analyze_pdf_flag_missing_mmdc(runner, tmp_path):
+    """--pdf with mmdc absent prints a helpful error and exits non-zero."""
+    from unittest.mock import patch
+
+    with patch("spartastruct.renderer.pdf_exporter.shutil.which", return_value=None):
+        result = runner.invoke(
+            main,
+            ["analyze", PLAIN_DIR, "--no-llm", "--pdf", "--output", str(tmp_path / "out")],
+        )
+
+    assert result.exit_code != 0
+    assert "mmdc" in result.output.lower() or "mermaid" in result.output.lower()
+
+
+def test_analyze_without_pdf_flag_does_not_call_mmdc(runner, tmp_path):
+    """Without --pdf, mmdc subprocess is never called."""
+    from unittest.mock import patch
+
+    with patch("spartastruct.renderer.pdf_exporter.subprocess.run") as mock_run:
+        result = runner.invoke(
+            main,
+            ["analyze", PLAIN_DIR, "--no-llm", "--output", str(tmp_path / "out")],
+        )
+
+    assert result.exit_code == 0, result.output
+    mock_run.assert_not_called()

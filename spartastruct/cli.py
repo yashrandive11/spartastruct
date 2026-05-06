@@ -66,7 +66,12 @@ def init() -> None:
 @click.option("--no-llm", is_flag=True, help="Skip LLM enrichment (fully offline)")
 @click.option("--model", default=None, help="Override LLM model")
 @click.option("--output", default=None, help="Override output directory")
-def analyze(path: str, no_llm: bool, model: str | None, output: str | None) -> None:
+@click.option(
+    "--pdf",
+    is_flag=True,
+    help="Export each diagram as a PDF (requires mmdc: npm install -g @mermaid-js/mermaid-cli)",
+)
+def analyze(path: str, no_llm: bool, model: str | None, output: str | None, pdf: bool) -> None:
     """Analyze a Python project and write spartadocs/ARCHITECTURE.md."""
     cfg = load_config()
     if model:
@@ -78,6 +83,10 @@ def analyze(path: str, no_llm: bool, model: str | None, output: str | None) -> N
     project_root = find_project_root(project_path) or project_path
     project_name = project_root.name
 
+    out_dir = project_path / cfg.output_dir
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    pdf_count = 0
     try:
         with Progress(
             SpinnerColumn(), TextColumn("{task.description}"), console=console
@@ -110,8 +119,23 @@ def analyze(path: str, no_llm: bool, model: str | None, output: str | None) -> N
             progress.update(t, description="Rendering markdown…")
             markdown = render(result, sections, project_name)
 
-        out_dir = project_path / cfg.output_dir
-        out_dir.mkdir(parents=True, exist_ok=True)
+            if pdf:
+                from spartastruct.renderer.pdf_exporter import export_all_pdfs, find_mmdc
+
+                mmdc_path = find_mmdc()
+                if mmdc_path is None:
+                    raise click.ClickException(
+                        "mmdc not found. Install the Mermaid CLI with:\n"
+                        "  npm install -g @mermaid-js/mermaid-cli"
+                    )
+                pdf_files = export_all_pdfs(
+                    sections,
+                    out_dir,
+                    mmdc_path,
+                    progress_callback=lambda msg: progress.update(t, description=msg),
+                )
+                pdf_count = len(pdf_files)
+
         out_file = out_dir / "ARCHITECTURE.md"
         out_file.write_text(markdown, encoding="utf-8")
 
@@ -127,6 +151,8 @@ def analyze(path: str, no_llm: bool, model: str | None, output: str | None) -> N
             summary_lines.append(f"[yellow]LLM warnings: {len(failures)} failure(s)[/yellow]")
         if result.warnings:
             summary_lines.append(f"[yellow]Warnings: {len(result.warnings)}[/yellow]")
+        if pdf_count:
+            summary_lines.append(f"PDFs written: {pdf_count}")
 
         console.print(
             Panel(

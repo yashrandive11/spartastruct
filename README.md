@@ -44,6 +44,23 @@ Output: `spartadocs/ARCHITECTURE.md` in your project directory.
 | `--no-llm` | off | Skip LLM; fully offline, static diagrams only |
 | `--model MODEL` | from config | Override LLM model |
 | `--output DIR` | `spartadocs` | Override output directory |
+| `--pdf` | off | Export each diagram as a PDF (requires `mmdc`) |
+
+## PDF Export
+
+To export each diagram as a PDF, install the Mermaid CLI (requires Node.js):
+
+```bash
+npm install -g @mermaid-js/mermaid-cli
+```
+
+Then pass `--pdf` to `analyze`:
+
+```bash
+spartastruct analyze /path/to/project --no-llm --pdf
+```
+
+This writes `class_diagram.pdf`, `er_diagram.pdf`, `dfd.pdf`, `flowchart.pdf`, `function_graph.pdf`, and `module_graph.pdf` into the output directory alongside `ARCHITECTURE.md`.
 
 ### `spartastruct init`
 
