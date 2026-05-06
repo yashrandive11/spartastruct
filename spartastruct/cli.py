@@ -89,7 +89,6 @@ def analyze(path: str, no_llm: bool, model: str | None, output: str | None) -> N
     out_dir = project_path / cfg.output_dir
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    pdf_count = 0
     try:
         with Progress(
             SpinnerColumn(), TextColumn("{task.description}"), console=console
