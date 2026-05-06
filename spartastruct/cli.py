@@ -20,7 +20,7 @@ from spartastruct.diagrams import (
     module_graph,
 )
 from spartastruct.llm.client import call_llm_for_diagram, get_llm_failures
-from spartastruct.renderer.markdown_renderer import make_sections, render
+from spartastruct.renderer.markdown_renderer import make_sections
 from spartastruct.utils.file_walker import find_project_root, walk_project
 from spartastruct.utils.framework_detector import detect_frameworks
 
@@ -66,13 +66,17 @@ def init() -> None:
 @click.option("--no-llm", is_flag=True, help="Skip LLM enrichment (fully offline)")
 @click.option("--model", default=None, help="Override LLM model")
 @click.option("--output", default=None, help="Override output directory")
-@click.option(
-    "--pdf",
-    is_flag=True,
-    help="Export each diagram as a PDF (requires mmdc: npm install -g @mermaid-js/mermaid-cli)",
-)
-def analyze(path: str, no_llm: bool, model: str | None, output: str | None, pdf: bool) -> None:
-    """Analyze a Python project and write spartadocs/ARCHITECTURE.md."""
+def analyze(path: str, no_llm: bool, model: str | None, output: str | None) -> None:
+    """Analyze a Python project and export each diagram as a PDF."""
+    from spartastruct.renderer.pdf_exporter import export_all_pdfs, find_mmdc
+
+    mmdc_path = find_mmdc()
+    if mmdc_path is None:
+        raise click.ClickException(
+            "mmdc not found. Install the Mermaid CLI with:\n"
+            "  npm install -g @mermaid-js/mermaid-cli"
+        )
+
     cfg = load_config()
     if model:
         cfg.model = model
@@ -81,7 +85,6 @@ def analyze(path: str, no_llm: bool, model: str | None, output: str | None, pdf:
 
     project_path = Path(path).resolve()
     project_root = find_project_root(project_path) or project_path
-    project_name = project_root.name
 
     out_dir = project_path / cfg.output_dir
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -116,32 +119,19 @@ def analyze(path: str, no_llm: bool, model: str | None, output: str | None, pdf:
                         result.llm_calls_succeeded += 1
 
             sections = make_sections(static_diagrams, llm_results)
-            progress.update(t, description="Rendering markdown…")
-            markdown = render(result, sections, project_name)
 
-            if pdf:
-                from spartastruct.renderer.pdf_exporter import export_all_pdfs, find_mmdc
-
-                mmdc_path = find_mmdc()
-                if mmdc_path is None:
-                    raise click.ClickException(
-                        "mmdc not found. Install the Mermaid CLI with:\n"
-                        "  npm install -g @mermaid-js/mermaid-cli"
-                    )
-                pdf_files = export_all_pdfs(
-                    sections,
-                    out_dir,
-                    mmdc_path,
-                    progress_callback=lambda msg: progress.update(t, description=msg),
-                )
-                pdf_count = len(pdf_files)
-
-        out_file = out_dir / "ARCHITECTURE.md"
-        out_file.write_text(markdown, encoding="utf-8")
+            pdf_files = export_all_pdfs(
+                sections,
+                out_dir,
+                mmdc_path,
+                progress_callback=lambda msg: progress.update(t, description=msg),
+            )
+            pdf_count = len(pdf_files)
 
         failures = get_llm_failures()
         summary_lines = [
-            f"[green]Written:[/green] {out_file}",
+            f"[green]Output:[/green] {out_dir}",
+            f"PDFs written: {pdf_count}",
             f"Files analyzed: {len(result.files_analyzed)}",
             f"Frameworks: {', '.join(result.frameworks) or 'none detected'}",
         ]
@@ -151,8 +141,6 @@ def analyze(path: str, no_llm: bool, model: str | None, output: str | None, pdf:
             summary_lines.append(f"[yellow]LLM warnings: {len(failures)} failure(s)[/yellow]")
         if result.warnings:
             summary_lines.append(f"[yellow]Warnings: {len(result.warnings)}[/yellow]")
-        if pdf_count:
-            summary_lines.append(f"PDFs written: {pdf_count}")
 
         console.print(
             Panel(

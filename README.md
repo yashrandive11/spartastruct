@@ -2,7 +2,7 @@
 
 > Instant architecture diagrams for any Python codebase
 
-SpartaStruct analyzes your Python project using AST parsing and (optionally) an LLM, then generates a single `spartadocs/ARCHITECTURE.md` containing six Mermaid.js architecture diagrams.
+SpartaStruct analyzes your Python project using AST parsing and (optionally) an LLM, then exports six Mermaid.js architecture diagrams as PDFs.
 
 ## Diagrams Generated
 
@@ -33,7 +33,7 @@ spartastruct config --api-key anthropic YOUR_KEY
 spartastruct analyze /path/to/your/project
 ```
 
-Output: `spartadocs/ARCHITECTURE.md` in your project directory.
+Output: six PDF files in `spartadocs/` in your project directory.
 
 ## CLI Reference
 
@@ -44,23 +44,22 @@ Output: `spartadocs/ARCHITECTURE.md` in your project directory.
 | `--no-llm` | off | Skip LLM; fully offline, static diagrams only |
 | `--model MODEL` | from config | Override LLM model |
 | `--output DIR` | `spartadocs` | Override output directory |
-| `--pdf` | off | Export each diagram as a PDF (requires `mmdc`) |
 
 ## PDF Export
 
-To export each diagram as a PDF, install the Mermaid CLI (requires Node.js):
+PDFs are the default output. Install the Mermaid CLI (requires Node.js) before running `analyze`:
 
 ```bash
 npm install -g @mermaid-js/mermaid-cli
 ```
 
-Then pass `--pdf` to `analyze`:
+Then run:
 
 ```bash
-spartastruct analyze /path/to/project --no-llm --pdf
+spartastruct analyze /path/to/project --no-llm
 ```
 
-This writes `class_diagram.pdf`, `er_diagram.pdf`, `dfd.pdf`, `flowchart.pdf`, `function_graph.pdf`, and `module_graph.pdf` into the output directory alongside `ARCHITECTURE.md`.
+This writes `class_diagram.pdf`, `er_diagram.pdf`, `dfd.pdf`, `flowchart.pdf`, `function_graph.pdf`, and `module_graph.pdf` into the output directory.
 
 ### `spartastruct init`
 
