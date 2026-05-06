@@ -4,15 +4,16 @@
   <br/>
 
   [![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org)
+  [![JS/TS](https://img.shields.io/badge/JS%2FTS-supported-f7df1e?style=flat-square&logo=typescript&logoColor=black)](spartastruct/analyzer/js_analyzer.py)
   [![License: MIT](https://img.shields.io/badge/License-MIT-6366f1?style=flat-square)](LICENSE)
-  [![Tests](https://img.shields.io/badge/Tests-79%20passing-22c55e?style=flat-square)](tests/)
+  [![Tests](https://img.shields.io/badge/Tests-106%20passing-22c55e?style=flat-square)](tests/)
   [![Diagrams](https://img.shields.io/badge/Diagrams-6%20types-a855f7?style=flat-square)](spartastruct/diagrams/)
   [![LLM](https://img.shields.io/badge/LLM-litellm%20%E2%80%94%20any%20provider-f59e0b?style=flat-square)](https://docs.litellm.ai/)
 
   <br/>
 
-  **Point SpartaStruct at any Python project and get 6 architecture diagrams as PDFs in under a minute.**  
-  No configuration required. Works offline. Optionally enriched by any LLM.
+  **Point SpartaStruct at any Python, JavaScript, or TypeScript project and get 6 architecture diagrams in under a minute.**  
+  PDF and PNG export. Works offline. Optionally enriched by any LLM.
 
 </div>
 
@@ -216,7 +217,8 @@ spartastruct analyze . --output ./my-docs       # write PDFs to a custom folder
 |------|---------|-------------|
 | `--no-llm` | off | Skip LLM enrichment entirely. Static diagrams only. Fully offline. |
 | `--model MODEL` | from config | Use a different LLM model just for this run. Uses litellm format: `provider/model`. |
-| `--output DIR` | `spartadocs` | Write PDFs here instead of the default `spartadocs/` folder. |
+| `--output DIR` | `spartadocs` | Write PDFs/PNGs here instead of the default `spartadocs/` folder. |
+| `--format FORMAT` | `pdf` | Output format: `pdf`, `png` (transparent background, 3× scale), or `both`. |
 
 ---
 
