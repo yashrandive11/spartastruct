@@ -9,7 +9,9 @@ from spartastruct.analyzer.base import AnalysisResult
 _MAX_FUNCTIONS = 50
 _MAX_OUT_EDGES = 8  # max edges per source node to prevent star explosion
 
-_INIT_CONFIG = '%%{init: {"flowchart": {"nodeSpacing": 60, "rankSpacing": 100}} }%%'
+_INIT_CONFIG = (
+    '%%{init: {"flowchart": {"nodeSpacing": 60, "rankSpacing": 100}, "maxTextSize": 200000} }%%'
+)
 
 
 def generate(result: AnalysisResult) -> str:

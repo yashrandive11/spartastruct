@@ -43,7 +43,7 @@ def generate(result: AnalysisResult) -> str:
     if not models:
         return 'erDiagram\n    NOTE { string message "No ORM models detected" }'
 
-    lines = ["erDiagram"]
+    lines = ['%%{init: {"maxTextSize": 200000} }%%', "erDiagram"]
 
     for model in models:
         lines.append(f"    {model.name} {{")

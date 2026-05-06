@@ -14,7 +14,7 @@ def generate(result: AnalysisResult) -> str:
     Returns:
         A Mermaid flowchart TD string (without fences).
     """
-    lines = ["flowchart TD"]
+    lines = ['%%{init: {"maxTextSize": 200000} }%%', "flowchart TD"]
 
     entry_points = result.entry_points
     frameworks = result.frameworks

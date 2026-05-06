@@ -5,6 +5,7 @@ from __future__ import annotations
 from spartastruct.analyzer.base import AnalysisResult
 
 _VIS_PREFIX = {"public": "+", "protected": "#", "private": "-"}
+_INIT_CONFIG = '%%{init: {"maxTextSize": 200000} }%%'
 
 
 def generate(result: AnalysisResult) -> str:
@@ -20,7 +21,7 @@ def generate(result: AnalysisResult) -> str:
     if not classes:
         return 'classDiagram\n    note "No classes found in this project"'
 
-    lines = ["classDiagram"]
+    lines = [_INIT_CONFIG, "classDiagram"]
 
     for cls in classes:
         lines.append(f"    class {_safe_name(cls.name)} {{")

@@ -21,7 +21,8 @@ def generate(result: AnalysisResult) -> str:
         A Mermaid graph TD string (without fences).
     """
     lines = [
-        '%%{init: {"flowchart": {"nodeSpacing": 60, "rankSpacing": 100}} }%%',
+        '%%{init: {"flowchart": {"nodeSpacing": 60, "rankSpacing": 100},'
+        ' "maxTextSize": 200000} }%%',
         "graph TD",
     ]
     lines.append("    classDef entrypoint fill:#fff3cd,stroke:#ff9800")

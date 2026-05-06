@@ -14,7 +14,7 @@ def generate(result: AnalysisResult) -> str:
     Returns:
         A Mermaid flowchart LR string (without fences).
     """
-    lines = ["flowchart LR"]
+    lines = ['%%{init: {"maxTextSize": 200000} }%%', "flowchart LR"]
 
     routes = result.all_routes
     orm_models = result.orm_models
