@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
+import litellm
+
 from spartastruct.analyzer.base import AnalysisResult, ClassInfo, FileResult, ImportInfo
 from spartastruct.llm.client import (
     _MAX_CLASSES,
@@ -46,6 +48,40 @@ def test_parse_llm_response_strips_whitespace():
     desc, mermaid = _parse_llm_response(response, "fb")
     assert desc == "Description here."
     assert mermaid.startswith("graph LR")
+
+
+def test_call_llm_retries_on_rate_limit_then_succeeds():
+    from unittest.mock import MagicMock
+    success_response = MagicMock()
+    success_response.choices[0].message.content = "ok"
+    calls = []
+
+    def fake_completion(**kwargs):
+        calls.append(1)
+        if len(calls) < 2:
+            raise litellm.RateLimitError("rate limit", llm_provider="anthropic", model="haiku")
+        return success_response
+
+    with patch("litellm.completion", side_effect=fake_completion):
+        with patch("time.sleep"):  # don't actually wait in tests
+            result = call_llm("prompt", "system", "model", {})
+
+    assert result == "ok"
+    assert len(calls) == 2
+    assert get_llm_failures() == []  # no failure recorded on successful retry
+
+
+def test_call_llm_gives_up_after_max_retries():
+    with patch("litellm.completion", side_effect=litellm.RateLimitError(
+        "rate limit", llm_provider="anthropic", model="haiku"
+    )):
+        with patch("time.sleep"):
+            result = call_llm("prompt", "system", "model", {})
+
+    assert result == ""
+    failures = get_llm_failures()
+    assert len(failures) == 1
+    assert "Rate limit hit" in failures[0]
 
 
 def _make_result(n_files: int = 1, n_classes: int = 0) -> AnalysisResult:

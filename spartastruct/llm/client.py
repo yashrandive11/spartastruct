@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import time
 
 import litellm
 
@@ -14,6 +15,9 @@ from spartastruct.llm.prompts import DIAGRAM_PROMPTS
 litellm.suppress_debug_info = True
 
 _llm_failures: list[str] = []
+
+_RATE_LIMIT_RETRIES = 3
+_RATE_LIMIT_BACKOFF_BASE = 15  # seconds; doubles each retry (15 → 30 → 60)
 
 
 def get_llm_failures() -> list[str]:
@@ -46,20 +50,33 @@ def call_llm(
     model: str,
     api_keys: dict[str, str],
 ) -> str:
-    """Call the LLM and return the text response, or "" on any failure."""
+    """Call the LLM and return the text response, or "" on any failure.
+
+    Retries up to _RATE_LIMIT_RETRIES times with exponential backoff when a
+    RateLimitError is returned, so large projects don't fail on the TPM cap.
+    """
     _set_api_key_env_vars(api_keys)
-    try:
-        response = litellm.completion(
-            model=model,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": prompt},
-            ],
-        )
-        return response.choices[0].message.content or ""
-    except Exception as exc:
-        _llm_failures.append(str(exc))
-        return ""
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": prompt},
+    ]
+    delay = _RATE_LIMIT_BACKOFF_BASE
+    for attempt in range(_RATE_LIMIT_RETRIES + 1):
+        try:
+            response = litellm.completion(model=model, messages=messages)
+            return response.choices[0].message.content or ""
+        except litellm.RateLimitError:
+            if attempt == _RATE_LIMIT_RETRIES:
+                _llm_failures.append(
+                    f"Rate limit hit after {_RATE_LIMIT_RETRIES} retries — skipping diagram enrichment."
+                )
+                return ""
+            time.sleep(delay)
+            delay *= 2
+        except Exception as exc:
+            _llm_failures.append(str(exc))
+            return ""
+    return ""  # unreachable
 
 
 def _parse_llm_response(response: str, fallback_mermaid: str) -> tuple[str, str]:
@@ -72,10 +89,10 @@ def _parse_llm_response(response: str, fallback_mermaid: str) -> tuple[str, str]
     return (description, mermaid)
 
 
-_MAX_CLASSES = 150
-_MAX_ROUTES = 100
-_MAX_FILES = 200
-_MAX_DIAGRAM_CHARS = 8_000
+_MAX_CLASSES = 80
+_MAX_ROUTES = 50
+_MAX_FILES = 100
+_MAX_DIAGRAM_CHARS = 4_000
 
 
 def _result_to_json(result: AnalysisResult) -> str:
