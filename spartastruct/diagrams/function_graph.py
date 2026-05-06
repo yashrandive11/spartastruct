@@ -7,6 +7,9 @@ from pathlib import Path
 from spartastruct.analyzer.base import AnalysisResult
 
 _MAX_FUNCTIONS = 50
+_MAX_OUT_EDGES = 8  # max edges per source node to prevent star explosion
+
+_INIT_CONFIG = '%%{init: {"flowchart": {"nodeSpacing": 60, "rankSpacing": 100}} }%%'
 
 
 def generate(result: AnalysisResult) -> str:
@@ -14,6 +17,7 @@ def generate(result: AnalysisResult) -> str:
 
     Groups nodes by file using subgraph blocks. Async functions get the
     :::async style class. Entry point functions get :::entrypoint.
+    Edges are deduplicated and capped per source node to avoid visual clutter.
 
     Args:
         result: The full analysis result.
@@ -21,26 +25,21 @@ def generate(result: AnalysisResult) -> str:
     Returns:
         A Mermaid graph LR string (without fences).
     """
-    lines = ["graph LR"]
+    lines = [_INIT_CONFIG, "graph LR"]
 
-    # Count total functions
     all_fn_count = sum(
         len(fr.functions) + sum(len(c.methods) for c in fr.classes) for fr in result.files_analyzed
     )
-    truncated = all_fn_count > _MAX_FUNCTIONS
-
-    if truncated:
+    if all_fn_count > _MAX_FUNCTIONS:
         lines.append(
             f"    %% Note: {all_fn_count} functions found — showing entry-point call graph only"
         )
 
-    # Style definitions
     lines.append("    classDef async fill:#e8f4fd,stroke:#2196f3")
     lines.append("    classDef entrypoint fill:#fff3cd,stroke:#ff9800")
 
     entry_files = set(result.entry_points)
-
-    node_ids: dict[str, str] = {}  # qualified name → node id
+    node_ids: dict[str, str] = {}
     id_counter = [0]
 
     def make_id(qualified: str) -> str:
@@ -53,7 +52,6 @@ def generate(result: AnalysisResult) -> str:
         stem = Path(fr.path).stem
         subgraph_id = _safe_id(stem)
         lines.append(f'    subgraph {subgraph_id}["{fr.path}"]')
-
         is_entry_file = fr.path in entry_files
 
         for fn in fr.functions:
@@ -77,7 +75,10 @@ def generate(result: AnalysisResult) -> str:
 
         lines.append("    end")
 
-    # Edges
+    # Edges — deduplicated and capped per source node
+    seen_edges: set[tuple[str, str]] = set()
+    out_edge_count: dict[str, int] = {}
+
     for fr in result.files_analyzed:
         stem = Path(fr.path).stem
         for fn in fr.functions:
@@ -86,9 +87,14 @@ def generate(result: AnalysisResult) -> str:
                 continue
             for call in fn.calls:
                 callee_id = node_ids.get(call) or node_ids.get(f"{stem}.{call}")
-                if callee_id:
-                    edge_label = "async call" if fn.is_async else "call"
-                    lines.append(f'    {caller_id} -->|"{edge_label}"| {callee_id}')
+                if not callee_id:
+                    continue
+                edge = (caller_id, callee_id)
+                if edge in seen_edges or out_edge_count.get(caller_id, 0) >= _MAX_OUT_EDGES:
+                    continue
+                seen_edges.add(edge)
+                out_edge_count[caller_id] = out_edge_count.get(caller_id, 0) + 1
+                lines.append(f"    {caller_id} --> {callee_id}")
 
         for cls in fr.classes:
             for method in cls.methods:
@@ -97,8 +103,14 @@ def generate(result: AnalysisResult) -> str:
                     continue
                 for call in method.calls:
                     callee_id = node_ids.get(call)
-                    if callee_id:
-                        lines.append(f'    {caller_id} -->|"call"| {callee_id}')
+                    if not callee_id:
+                        continue
+                    edge = (caller_id, callee_id)
+                    if edge in seen_edges or out_edge_count.get(caller_id, 0) >= _MAX_OUT_EDGES:
+                        continue
+                    seen_edges.add(edge)
+                    out_edge_count[caller_id] = out_edge_count.get(caller_id, 0) + 1
+                    lines.append(f"    {caller_id} --> {callee_id}")
 
     return "\n".join(lines)
 

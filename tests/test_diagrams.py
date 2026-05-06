@@ -144,7 +144,7 @@ def test_flowchart_web_lifecycle(fastapi_result):
 
 def test_function_graph_starts_with_header(plain_result):
     output = function_graph.generate(plain_result)
-    assert output.startswith("graph LR")
+    assert "graph LR" in output
 
 
 def test_function_graph_has_subgraphs(plain_result):
@@ -162,7 +162,7 @@ def test_function_graph_empty(empty_result):
 
 def test_module_graph_starts_with_header(plain_result):
     output = module_graph.generate(plain_result)
-    assert output.startswith("graph TD")
+    assert "graph TD" in output
 
 
 def test_module_graph_has_file_nodes(plain_result):
@@ -173,3 +173,49 @@ def test_module_graph_has_file_nodes(plain_result):
 def test_module_graph_empty_state(empty_result):
     output = module_graph.generate(empty_result)
     assert "graph TD" in output
+
+
+def test_function_graph_has_spacing_config(plain_result):
+    out = function_graph.generate(plain_result)
+    assert "%%{init" in out
+    assert "nodeSpacing" in out
+
+
+def test_function_graph_no_edge_labels(plain_result):
+    out = function_graph.generate(plain_result)
+    assert "-->|" not in out
+
+
+def test_function_graph_deduplicates_edges():
+    """Same caller→callee pair must appear only once even if called N times."""
+    from spartastruct.analyzer.base import FileResult, FunctionInfo
+
+    fn_a = FunctionInfo(name="a", calls=["b", "b", "b"])
+    fn_b = FunctionInfo(name="b")
+    fr = FileResult(path="mod.py", functions=[fn_a, fn_b])
+    result = AnalysisResult(files_analyzed=[fr])
+    out = function_graph.generate(result)
+    edge_lines = [
+        line.strip()
+        for line in out.splitlines()
+        if "-->" in line and "%%{" not in line and "subgraph" not in line
+    ]
+    assert len(edge_lines) == 1
+
+
+def test_module_graph_has_spacing_config(fastapi_result):
+    out = module_graph.generate(fastapi_result)
+    assert "%%{init" in out
+    assert "nodeSpacing" in out
+
+
+def test_module_graph_deduplicates_edges():
+    """Same src→dst module edge must appear only once."""
+    from spartastruct.analyzer.base import FileResult, ImportInfo
+
+    fr_a = FileResult(path="a.py", imports=ImportInfo(local=["b", "b"]))
+    fr_b = FileResult(path="b.py")
+    result = AnalysisResult(files_analyzed=[fr_a, fr_b])
+    out = module_graph.generate(result)
+    edge_lines = [l.strip() for l in out.splitlines() if "-->" in l and "%%{" not in l]
+    assert edge_lines.count("mod0 --> mod1") == 1

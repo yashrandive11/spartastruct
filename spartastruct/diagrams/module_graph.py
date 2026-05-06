@@ -20,7 +20,10 @@ def generate(result: AnalysisResult) -> str:
     Returns:
         A Mermaid graph TD string (without fences).
     """
-    lines = ["graph TD"]
+    lines = [
+        '%%{init: {"flowchart": {"nodeSpacing": 60, "rankSpacing": 100}} }%%',
+        "graph TD",
+    ]
     lines.append("    classDef entrypoint fill:#fff3cd,stroke:#ff9800")
     lines.append("    classDef external fill:#f8d7da,stroke:#dc3545")
 
@@ -74,26 +77,32 @@ def generate(result: AnalysisResult) -> str:
             lines.append(f"        {eid}:::external")
         lines.append("    end")
 
-    # Edges: local imports
+    # Edges: local imports (deduplicated)
+    seen_edges: set[tuple[str, str]] = set()
+
     for fr in result.files_analyzed:
         src_id = node_ids[fr.path]
         for local_imp in fr.imports.local:
-            # Resolve import root to a file path
             imp_root = local_imp.split(".")[0]
             for other_path in node_ids:
                 other_stem = Path(other_path).stem
                 normalized_path = other_path.replace("/", ".").replace(".py", "")
                 if other_stem == imp_root or normalized_path == local_imp:
                     dst_id = node_ids[other_path]
-                    if src_id != dst_id:
+                    edge = (src_id, dst_id)
+                    if src_id != dst_id and edge not in seen_edges:
+                        seen_edges.add(edge)
                         lines.append(f"    {src_id} --> {dst_id}")
                     break
 
-        # Third-party edges
+        # Third-party edges (deduplicated)
         for tp_imp in fr.imports.third_party:
             root = tp_imp.split(".")[0]
             if root in ext_ids:
-                lines.append(f"    {src_id} --> {ext_ids[root]}")
+                edge = (src_id, ext_ids[root])
+                if edge not in seen_edges:
+                    seen_edges.add(edge)
+                    lines.append(f"    {src_id} --> {ext_ids[root]}")
 
     return "\n".join(lines)
 
