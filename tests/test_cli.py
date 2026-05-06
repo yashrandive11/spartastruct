@@ -110,3 +110,32 @@ def test_config_update_model(runner, tmp_path, monkeypatch):
     assert result.exit_code == 0
     cfg = cfg_mod.load_config()
     assert cfg.model == "openai/gpt-4o"
+
+
+def test_analyze_png_format_writes_pngs(runner, tmp_path):
+    result = runner.invoke(
+        main,
+        ["analyze", PLAIN_DIR, "--no-llm", "--output", str(tmp_path / "out"), "--format", "png"],
+    )
+    assert result.exit_code == 0, result.output
+    assert "PNGs written" in result.output
+
+
+def test_analyze_both_format_writes_pdfs_and_pngs(runner, tmp_path):
+    result = runner.invoke(
+        main,
+        ["analyze", PLAIN_DIR, "--no-llm", "--output", str(tmp_path / "out"), "--format", "both"],
+    )
+    assert result.exit_code == 0, result.output
+    assert "PDFs written" in result.output
+    assert "PNGs written" in result.output
+
+
+def test_analyze_default_format_is_pdf(runner, tmp_path):
+    result = runner.invoke(
+        main,
+        ["analyze", PLAIN_DIR, "--no-llm", "--output", str(tmp_path / "out")],
+    )
+    assert result.exit_code == 0, result.output
+    assert "PDFs written" in result.output
+    assert "PNGs written" not in result.output

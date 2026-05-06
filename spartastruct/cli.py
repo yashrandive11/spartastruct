@@ -66,9 +66,18 @@ def init() -> None:
 @click.option("--no-llm", is_flag=True, help="Skip LLM enrichment (fully offline)")
 @click.option("--model", default=None, help="Override LLM model")
 @click.option("--output", default=None, help="Override output directory")
-def analyze(path: str, no_llm: bool, model: str | None, output: str | None) -> None:
+@click.option(
+    "--format",
+    "export_format",
+    default="pdf",
+    type=click.Choice(["pdf", "png", "both"], case_sensitive=False),
+    help="Output format: pdf (default), png (transparent background, 3x scale), or both",
+)
+def analyze(  # noqa: PLR0913
+    path: str, no_llm: bool, model: str | None, output: str | None, export_format: str
+) -> None:
     """Analyze a Python project and export each diagram as a PDF."""
-    from spartastruct.renderer.pdf_exporter import export_all_pdfs, find_mmdc
+    from spartastruct.renderer.pdf_exporter import export_all_pdfs, export_all_pngs, find_mmdc
 
     mmdc_path = find_mmdc()
     if mmdc_path is None:
@@ -119,18 +128,33 @@ def analyze(path: str, no_llm: bool, model: str | None, output: str | None) -> N
 
             sections = make_sections(static_diagrams, llm_results)
 
-            pdf_files = export_all_pdfs(
-                sections,
-                out_dir,
-                mmdc_path,
-                progress_callback=lambda msg: progress.update(t, description=msg),
-            )
-            pdf_count = len(pdf_files)
+            pdf_files: list[Path] = []
+            png_files: list[Path] = []
+
+            if export_format in ("pdf", "both"):
+                pdf_files = export_all_pdfs(
+                    sections,
+                    out_dir,
+                    mmdc_path,
+                    progress_callback=lambda msg: progress.update(t, description=msg),
+                )
+            if export_format in ("png", "both"):
+                png_files = export_all_pngs(
+                    sections,
+                    out_dir,
+                    mmdc_path,
+                    progress_callback=lambda msg: progress.update(t, description=msg),
+                )
 
         failures = get_llm_failures()
         summary_lines = [
             f"[green]Output:[/green] {out_dir}",
-            f"PDFs written: {pdf_count}",
+        ]
+        if pdf_files:
+            summary_lines.append(f"PDFs written: {len(pdf_files)}")
+        if png_files:
+            summary_lines.append(f"PNGs written: {len(png_files)}")
+        summary_lines += [
             f"Files analyzed: {len(result.files_analyzed)}",
             f"Frameworks: {', '.join(result.frameworks) or 'none detected'}",
         ]
