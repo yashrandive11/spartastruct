@@ -4,7 +4,16 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from spartastruct.llm.client import _parse_llm_response, call_llm, get_llm_failures
+from spartastruct.analyzer.base import AnalysisResult, ClassInfo, FileResult, ImportInfo
+from spartastruct.llm.client import (
+    _MAX_CLASSES,
+    _MAX_FILES,
+    _MAX_ROUTES,
+    _parse_llm_response,
+    _result_to_json,
+    call_llm,
+    get_llm_failures,
+)
 
 
 def test_parse_llm_response_extracts_mermaid():
@@ -37,3 +46,37 @@ def test_parse_llm_response_strips_whitespace():
     desc, mermaid = _parse_llm_response(response, "fb")
     assert desc == "Description here."
     assert mermaid.startswith("graph LR")
+
+
+def _make_result(n_files: int = 1, n_classes: int = 0) -> AnalysisResult:
+    files = [
+        FileResult(path=f"mod{i}.py", classes=[], functions=[], imports=ImportInfo(), routes=[])
+        for i in range(n_files)
+    ]
+    classes_per_file = n_classes // max(n_files, 1)
+    for fr in files:
+        for j in range(classes_per_file):
+            fr.classes.append(ClassInfo(name=f"C{j}"))
+    return AnalysisResult(files_analyzed=files)
+
+
+def test_result_to_json_small_project_no_truncation_note():
+    result = _make_result(n_files=5, n_classes=5)
+    payload = _result_to_json(result)
+    assert "note" not in payload
+
+
+def test_result_to_json_caps_files():
+    result = _make_result(n_files=_MAX_FILES + 50)
+    import json
+    data = json.loads(_result_to_json(result))
+    assert len(data["files"]) == _MAX_FILES
+    assert "note" in data
+
+
+def test_result_to_json_caps_classes():
+    result = _make_result(n_files=1, n_classes=_MAX_CLASSES + 20)
+    import json
+    data = json.loads(_result_to_json(result))
+    assert len(data["classes"]) == _MAX_CLASSES
+    assert "note" in data

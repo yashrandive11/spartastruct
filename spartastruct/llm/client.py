@@ -72,9 +72,29 @@ def _parse_llm_response(response: str, fallback_mermaid: str) -> tuple[str, str]
     return (description, mermaid)
 
 
+_MAX_CLASSES = 150
+_MAX_ROUTES = 100
+_MAX_FILES = 200
+_MAX_DIAGRAM_CHARS = 8_000
+
+
 def _result_to_json(result: AnalysisResult) -> str:
-    """Serialize relevant parts of AnalysisResult to a compact JSON string."""
-    data = {
+    """Serialize a capped subset of AnalysisResult to a compact JSON string.
+
+    Caps classes/routes/files so the prompt stays within LLM token limits on
+    large projects (thousands of files).
+    """
+    all_classes = result.all_classes
+    all_routes = result.all_routes
+    all_files = [fr.path for fr in result.files_analyzed]
+
+    truncated = (
+        len(all_classes) > _MAX_CLASSES
+        or len(all_routes) > _MAX_ROUTES
+        or len(all_files) > _MAX_FILES
+    )
+
+    data: dict = {
         "frameworks": result.frameworks,
         "entry_points": result.entry_points,
         "classes": [
@@ -87,14 +107,20 @@ def _result_to_json(result: AnalysisResult) -> str:
                 "attributes": [{"name": a.name, "type": a.type} for a in c.attributes],
                 "methods": [{"name": m.name, "return_type": m.return_type} for m in c.methods],
             }
-            for c in result.all_classes
+            for c in all_classes[:_MAX_CLASSES]
         ],
         "routes": [
             {"method": r.method, "path": r.path, "handler": r.handler_name}
-            for r in result.all_routes
+            for r in all_routes[:_MAX_ROUTES]
         ],
-        "files": [fr.path for fr in result.files_analyzed],
+        "files": all_files[:_MAX_FILES],
     }
+    if truncated:
+        data["note"] = (
+            f"Truncated: showing {min(len(all_classes), _MAX_CLASSES)}/{len(all_classes)} classes, "
+            f"{min(len(all_routes), _MAX_ROUTES)}/{len(all_routes)} routes, "
+            f"{min(len(all_files), _MAX_FILES)}/{len(all_files)} files."
+        )
     return json.dumps(data, separators=(",", ":"))
 
 
@@ -115,9 +141,12 @@ def call_llm_for_diagram(
         return ("", static_mermaid)
 
     parsed_json = _result_to_json(result)
+    diagram_snippet = static_mermaid[:_MAX_DIAGRAM_CHARS]
+    if len(static_mermaid) > _MAX_DIAGRAM_CHARS:
+        diagram_snippet += f"\n... (truncated, {len(static_mermaid)} chars total)"
     user_message = (
         f"Codebase structure:\n```json\n{parsed_json}\n```\n\n"
-        f"Static diagram:\n```mermaid\n{static_mermaid}\n```\n\n"
+        f"Static diagram:\n```mermaid\n{diagram_snippet}\n```\n\n"
         "Improve the diagram and provide a brief description."
     )
 
