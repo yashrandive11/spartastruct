@@ -12,6 +12,8 @@ from spartastruct.cli import main
 
 PLAIN_DIR = str(Path(__file__).parent / "fixtures" / "sample_plain")
 FASTAPI_DIR = str(Path(__file__).parent / "fixtures" / "sample_fastapi")
+EXPRESS_DIR = str(Path(__file__).parent / "fixtures" / "sample_express")
+TS_DIR = str(Path(__file__).parent / "fixtures" / "sample_ts")
 
 _MOCK_MMDC = "/usr/local/bin/mmdc"
 
@@ -139,3 +141,22 @@ def test_analyze_default_format_is_pdf(runner, tmp_path):
     assert result.exit_code == 0, result.output
     assert "PDFs written" in result.output
     assert "PNGs written" not in result.output
+
+
+def test_analyze_no_llm_express(runner, tmp_path):
+    result = runner.invoke(
+        main,
+        ["analyze", EXPRESS_DIR, "--no-llm", "--output", str(tmp_path / "out")],
+    )
+    assert result.exit_code == 0, result.output
+    assert "PDFs written" in result.output
+    assert "Files analyzed" in result.output
+
+
+def test_analyze_no_llm_typescript(runner, tmp_path):
+    result = runner.invoke(
+        main,
+        ["analyze", TS_DIR, "--no-llm", "--output", str(tmp_path / "out")],
+    )
+    assert result.exit_code == 0, result.output
+    assert "PDFs written" in result.output

@@ -9,6 +9,8 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
+from spartastruct.analyzer.base import AnalysisResult as _AnalysisResult
+from spartastruct.analyzer.js_analyzer import JsAnalyzer
 from spartastruct.analyzer.python_analyzer import PythonAnalyzer
 from spartastruct.config import Config, load_config, save_config
 from spartastruct.diagrams import (
@@ -34,6 +36,29 @@ _GENERATORS = {
     "function_graph": function_graph.generate,
     "module_graph": module_graph.generate,
 }
+
+_JS_TS_EXTENSIONS = frozenset({".js", ".ts", ".jsx", ".tsx"})
+_PY_EXTENSIONS = frozenset({".py"})
+
+
+def _detect_extensions(project_path: Path) -> frozenset[str]:
+    """Return extensions to walk based on which source files exist in the project."""
+
+    def _count(pattern: str) -> int:
+        return sum(
+            1
+            for p in project_path.rglob(pattern)
+            if "node_modules" not in str(p) and ".git" not in str(p)
+        )
+
+    py_count = _count("*.py")
+    js_count = sum(_count(ext) for ext in ("*.js", "*.ts", "*.jsx", "*.tsx"))
+
+    if py_count == 0 and js_count > 0:
+        return _JS_TS_EXTENSIONS
+    if js_count == 0:
+        return _PY_EXTENSIONS
+    return _PY_EXTENSIONS | _JS_TS_EXTENSIONS
 
 
 @click.group()
@@ -103,12 +128,30 @@ def analyze(  # noqa: PLR0913
             SpinnerColumn(), TextColumn("{task.description}"), console=console
         ) as progress:
             t = progress.add_task("Walking files…", total=None)
-            py_files, walk_warnings = walk_project(project_path)
-            progress.update(t, description=f"Found {len(py_files)} Python files")
+            extensions = _detect_extensions(project_path)
+            all_files, walk_warnings = walk_project(project_path, extensions=extensions)
+            progress.update(t, description=f"Found {len(all_files)} source files")
 
-            progress.update(t, description="Analyzing AST…")
-            analyzer = PythonAnalyzer(project_root)
-            result = analyzer.analyze(py_files, walk_warnings)
+            progress.update(t, description="Analyzing…")
+            # shared warning list — both analyzers append to it in-place
+            result = _AnalysisResult(warnings=walk_warnings)
+
+            py_files = [f for f in all_files if f.suffix == ".py"]
+            js_files = [f for f in all_files if f.suffix in _JS_TS_EXTENSIONS]
+
+            if py_files:
+                py_analyzer = PythonAnalyzer(project_root)
+                py_result = py_analyzer.analyze(py_files, walk_warnings)
+                result.files_analyzed.extend(py_result.files_analyzed)
+                result.entry_points.extend(py_result.entry_points)
+                result.files_skipped_parse_error += py_result.files_skipped_parse_error
+
+            if js_files:
+                js_analyzer = JsAnalyzer(project_root)
+                js_result = js_analyzer.analyze(js_files, walk_warnings)
+                result.files_analyzed.extend(js_result.files_analyzed)
+                result.entry_points.extend(js_result.entry_points)
+
             result.frameworks = detect_frameworks(result)
 
             progress.update(t, description="Generating diagrams…")
