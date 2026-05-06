@@ -1,0 +1,69 @@
+<svg width="760" height="90" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f172a"/>
+      <stop offset="100%" style="stop-color:#1e293b"/>
+    </linearGradient>
+  </defs>
+  <rect width="760" height="90" rx="10" fill="url(#bg2)"/>
+
+  <!-- Step boxes -->
+  <!-- Step 1 -->
+  <rect x="20" y="22" width="110" height="46" rx="8" fill="#1e1b4b" stroke="#6366f1" stroke-width="1.5">
+    <animate attributeName="stroke-opacity" values="1;0.4;1" dur="2s" begin="0s" repeatCount="indefinite"/>
+  </rect>
+  <text x="75" y="42" text-anchor="middle" font-family="'Segoe UI',sans-serif" font-size="11" font-weight="600" fill="#a5b4fc">📁 Your Project</text>
+  <text x="75" y="58" text-anchor="middle" font-family="'Segoe UI',sans-serif" font-size="9" fill="#64748b">.py files</text>
+
+  <!-- Arrow 1 -->
+  <line x1="130" y1="45" x2="158" y2="45" stroke="#4b5563" stroke-width="1.5" stroke-dasharray="4,2">
+    <animate attributeName="stroke-dashoffset" values="0;-12" dur="0.8s" repeatCount="indefinite"/>
+  </line>
+  <polygon points="158,41 166,45 158,49" fill="#6366f1"/>
+
+  <!-- Step 2 -->
+  <rect x="166" y="22" width="110" height="46" rx="8" fill="#1e1b4b" stroke="#6366f1" stroke-width="1.5">
+    <animate attributeName="stroke-opacity" values="1;0.4;1" dur="2s" begin="0.4s" repeatCount="indefinite"/>
+  </rect>
+  <text x="221" y="42" text-anchor="middle" font-family="'Segoe UI',sans-serif" font-size="11" font-weight="600" fill="#a5b4fc">🔍 AST Analyzer</text>
+  <text x="221" y="58" text-anchor="middle" font-family="'Segoe UI',sans-serif" font-size="9" fill="#64748b">classes, routes, calls</text>
+
+  <!-- Arrow 2 -->
+  <line x1="276" y1="45" x2="304" y2="45" stroke="#4b5563" stroke-width="1.5" stroke-dasharray="4,2">
+    <animate attributeName="stroke-dashoffset" values="0;-12" dur="0.8s" repeatCount="indefinite"/>
+  </line>
+  <polygon points="304,41 312,45 304,49" fill="#6366f1"/>
+
+  <!-- Step 3 -->
+  <rect x="312" y="22" width="110" height="46" rx="8" fill="#1e1b4b" stroke="#a855f7" stroke-width="1.5">
+    <animate attributeName="stroke-opacity" values="1;0.4;1" dur="2s" begin="0.8s" repeatCount="indefinite"/>
+  </rect>
+  <text x="367" y="42" text-anchor="middle" font-family="'Segoe UI',sans-serif" font-size="11" font-weight="600" fill="#d8b4fe">✨ LLM Enrich</text>
+  <text x="367" y="58" text-anchor="middle" font-family="'Segoe UI',sans-serif" font-size="9" fill="#64748b">optional, any provider</text>
+
+  <!-- Arrow 3 -->
+  <line x1="422" y1="45" x2="450" y2="45" stroke="#4b5563" stroke-width="1.5" stroke-dasharray="4,2">
+    <animate attributeName="stroke-dashoffset" values="0;-12" dur="0.8s" repeatCount="indefinite"/>
+  </line>
+  <polygon points="450,41 458,45 450,49" fill="#6366f1"/>
+
+  <!-- Step 4 -->
+  <rect x="458" y="22" width="110" height="46" rx="8" fill="#1e1b4b" stroke="#6366f1" stroke-width="1.5">
+    <animate attributeName="stroke-opacity" values="1;0.4;1" dur="2s" begin="1.2s" repeatCount="indefinite"/>
+  </rect>
+  <text x="513" y="42" text-anchor="middle" font-family="'Segoe UI',sans-serif" font-size="11" font-weight="600" fill="#a5b4fc">📊 6 Diagrams</text>
+  <text x="513" y="58" text-anchor="middle" font-family="'Segoe UI',sans-serif" font-size="9" fill="#64748b">Mermaid generated</text>
+
+  <!-- Arrow 4 -->
+  <line x1="568" y1="45" x2="596" y2="45" stroke="#4b5563" stroke-width="1.5" stroke-dasharray="4,2">
+    <animate attributeName="stroke-dashoffset" values="0;-12" dur="0.8s" repeatCount="indefinite"/>
+  </line>
+  <polygon points="596,41 604,45 596,49" fill="#6366f1"/>
+
+  <!-- Step 5 -->
+  <rect x="604" y="22" width="136" height="46" rx="8" fill="#1e1b4b" stroke="#6366f1" stroke-width="1.5">
+    <animate attributeName="stroke-opacity" values="1;0.4;1" dur="2s" begin="1.6s" repeatCount="indefinite"/>
+  </rect>
+  <text x="672" y="42" text-anchor="middle" font-family="'Segoe UI',sans-serif" font-size="11" font-weight="600" fill="#a5b4fc">📄 PDF Export</text>
+  <text x="672" y="58" text-anchor="middle" font-family="'Segoe UI',sans-serif" font-size="9" fill="#64748b">via mmdc CLI</text>
+</svg>

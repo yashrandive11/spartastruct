@@ -138,6 +138,8 @@ def analyze(path: str, no_llm: bool, model: str | None, output: str | None) -> N
             summary_lines.append(f"LLM enrichments: {result.llm_calls_succeeded}/6")
         if failures:
             summary_lines.append(f"[yellow]LLM warnings: {len(failures)} failure(s)[/yellow]")
+            for msg in failures:
+                summary_lines.append(f"[yellow]  • {msg}[/yellow]")
         if result.warnings:
             summary_lines.append(f"[yellow]Warnings: {len(result.warnings)}[/yellow]")
 
