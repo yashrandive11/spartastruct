@@ -146,3 +146,66 @@ const User = require('./models/User');
     imports = result.files_analyzed[0].imports
     assert any("express" in i for i in imports.third_party)
     assert any("User" in i for i in imports.local)
+
+
+def test_js_analyzer_extracts_express_routes(tmp_path):
+    f = tmp_path / "routes.js"
+    f.write_text("""
+const express = require('express');
+const router = express.Router();
+
+router.get('/users', async (req, res) => { res.json([]); });
+router.post('/users', async (req, res) => { res.json({}); });
+router.put('/users/:id', async (req, res) => { res.json({}); });
+router.delete('/users/:id', async (req, res) => { res.status(204).send(); });
+""")
+    analyzer = JsAnalyzer(tmp_path)
+    result = analyzer.analyze([f])
+    routes = result.files_analyzed[0].routes
+    methods = {r.method for r in routes}
+    paths = {r.path for r in routes}
+    assert "GET" in methods
+    assert "POST" in methods
+    assert "PUT" in methods
+    assert "DELETE" in methods
+    assert "/users" in paths
+
+
+def test_js_analyzer_extracts_app_get_routes(tmp_path):
+    f = tmp_path / "index.js"
+    f.write_text("""
+const app = require('express')();
+app.get('/health', (req, res) => res.json({ ok: true }));
+app.post('/login', (req, res) => res.json({ token: 'x' }));
+""")
+    analyzer = JsAnalyzer(tmp_path)
+    result = analyzer.analyze([f])
+    routes = result.files_analyzed[0].routes
+    assert any(r.path == "/health" and r.method == "GET" for r in routes)
+    assert any(r.path == "/login" and r.method == "POST" for r in routes)
+
+
+def test_js_analyzer_extracts_nestjs_controller_routes(tmp_path):
+    f = tmp_path / "users.controller.ts"
+    f.write_text("""
+import { Controller, Get, Post, Delete } from '@nestjs/common';
+
+@Controller('users')
+export class UsersController {
+  @Get()
+  findAll() { return []; }
+
+  @Post()
+  create() { return {}; }
+
+  @Delete(':id')
+  remove() { return null; }
+}
+""")
+    analyzer = JsAnalyzer(tmp_path)
+    result = analyzer.analyze([f])
+    routes = result.files_analyzed[0].routes
+    methods = {r.method for r in routes}
+    assert "GET" in methods
+    assert "POST" in methods
+    assert "DELETE" in methods
