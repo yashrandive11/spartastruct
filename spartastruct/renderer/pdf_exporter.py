@@ -79,3 +79,54 @@ def export_all_pdfs(
         out_file = export_diagram_pdf(section, out_dir, mmdc_path)
         results.append(out_file)
     return results
+
+
+def export_diagram_png(
+    section: DiagramSection,
+    out_dir: Path,
+    mmdc_path: str,
+    scale: int = 3,
+) -> Path:
+    """Export a single diagram to a high-quality transparent-background PNG."""
+    out_file = out_dir / f"{section.key}.png"
+
+    with tempfile.NamedTemporaryFile(suffix=".mmd", mode="w", delete=False, encoding="utf-8") as f:
+        f.write(section.mermaid)
+        mmd_path = f.name
+
+    try:
+        subprocess.run(
+            [
+                mmdc_path,
+                "-i", mmd_path,
+                "-o", str(out_file),
+                "--backgroundColor", "transparent",
+                "--scale", str(scale),
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    finally:
+        Path(mmd_path).unlink(missing_ok=True)
+
+    return out_file
+
+
+def export_all_pngs(
+    sections: list[DiagramSection],
+    out_dir: Path,
+    mmdc_path: str,
+    scale: int = 3,
+    progress_callback: Callable[[str], None] | None = None,
+) -> list[Path]:
+    """Export all non-empty diagrams to individual PNG files with transparent background."""
+    results = []
+    for section in sections:
+        if not section.mermaid.strip():
+            continue
+        if progress_callback:
+            progress_callback(f"Exporting {section.title} to PNG…")
+        out_file = export_diagram_png(section, out_dir, mmdc_path, scale=scale)
+        results.append(out_file)
+    return results

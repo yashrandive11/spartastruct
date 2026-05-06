@@ -10,7 +10,9 @@ import pytest
 from spartastruct.renderer.markdown_renderer import DiagramSection
 from spartastruct.renderer.pdf_exporter import (
     export_all_pdfs,
+    export_all_pngs,
     export_diagram_pdf,
+    export_diagram_png,
     find_mmdc,
 )
 
@@ -145,3 +147,57 @@ def test_export_all_pdfs_returns_all_paths(tmp_path):
 
     assert len(results) == 3
     assert all(p.suffix == ".pdf" for p in results)
+
+
+def test_export_diagram_png_calls_mmdc_with_transparent_bg(tmp_path):
+    section = DiagramSection(
+        key="class_diagram",
+        title="Class Diagram",
+        description="",
+        mermaid="classDiagram\n  class Foo",
+    )
+    with patch(
+        "spartastruct.renderer.pdf_exporter.subprocess.run",
+        return_value=MagicMock(returncode=0),
+    ) as mock_run:
+        out = export_diagram_png(section, tmp_path, "/usr/bin/mmdc")
+
+    assert out == tmp_path / "class_diagram.png"
+    cmd = mock_run.call_args[0][0]
+    assert "--backgroundColor" in cmd
+    assert "transparent" in cmd
+    assert "--scale" in cmd
+    assert "3" in cmd
+    assert str(out) in cmd
+
+
+def test_export_diagram_png_output_extension_is_png(tmp_path):
+    section = DiagramSection(key="er_diagram", title="ER", description="", mermaid="erDiagram")
+    mock_ret = MagicMock(returncode=0)
+    with patch("spartastruct.renderer.pdf_exporter.subprocess.run", return_value=mock_ret):
+        out = export_diagram_png(section, tmp_path, "/usr/bin/mmdc")
+    assert out.suffix == ".png"
+
+
+def test_export_all_pngs_skips_empty(tmp_path):
+    sections = [
+        DiagramSection(key="a", title="A", description="", mermaid="graph LR"),
+        DiagramSection(key="b", title="B", description="", mermaid=""),
+    ]
+    mock_ret = MagicMock(returncode=0)
+    with patch("spartastruct.renderer.pdf_exporter.subprocess.run", return_value=mock_ret):
+        results = export_all_pngs(sections, tmp_path, "/usr/bin/mmdc")
+    assert len(results) == 1
+    assert results[0].suffix == ".png"
+
+
+def test_export_all_pngs_returns_paths(tmp_path):
+    sections = [
+        DiagramSection(key="x", title="X", description="", mermaid="graph LR\n  A-->B"),
+        DiagramSection(key="y", title="Y", description="", mermaid="graph TD\n  C-->D"),
+    ]
+    mock_ret = MagicMock(returncode=0)
+    with patch("spartastruct.renderer.pdf_exporter.subprocess.run", return_value=mock_ret):
+        results = export_all_pngs(sections, tmp_path, "/usr/bin/mmdc")
+    keys = {r.stem for r in results}
+    assert keys == {"x", "y"}
