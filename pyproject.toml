@@ -5,7 +5,22 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "spartastruct"
 version = "0.1.0"
-description = "Instant architecture diagrams for any Python codebase"
+description = "Instant architecture diagrams for any Python, JavaScript, or TypeScript project"
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "Yash Randive", email = "yash.randive11@gmail.com" }]
+keywords = ["architecture", "diagrams", "mermaid", "code-analysis", "documentation"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Documentation",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
 requires-python = ">=3.10"
 dependencies = [
     "click>=8.1",
@@ -16,6 +31,11 @@ dependencies = [
     "tomli>=2.0; python_version < '3.11'",
     "tomli-w>=1.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/yashrandive11/spartastruct"
+Repository = "https://github.com/yashrandive11/spartastruct"
+Issues = "https://github.com/yashrandive11/spartastruct/issues"
 
 [project.scripts]
 spartastruct = "spartastruct.cli:main"
