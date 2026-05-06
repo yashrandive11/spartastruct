@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import shutil
 import subprocess
 import tempfile
@@ -9,6 +10,8 @@ from collections.abc import Callable
 from pathlib import Path
 
 from spartastruct.renderer.markdown_renderer import DiagramSection
+
+_MMDC_CONFIG = {"maxTextSize": 200000}
 
 
 def find_mmdc() -> str | None:
@@ -38,15 +41,22 @@ def export_diagram_pdf(
         f.write(section.mermaid)
         mmd_path = f.name
 
+    with tempfile.NamedTemporaryFile(
+        suffix=".json", mode="w", delete=False, encoding="utf-8"
+    ) as cfg:
+        json.dump(_MMDC_CONFIG, cfg)
+        cfg_path = cfg.name
+
     try:
         subprocess.run(
-            [mmdc_path, "-i", mmd_path, "-o", str(out_file)],
+            [mmdc_path, "-i", mmd_path, "-o", str(out_file), "--configFile", cfg_path],
             check=True,
             capture_output=True,
             text=True,
         )
     finally:
         Path(mmd_path).unlink(missing_ok=True)
+        Path(cfg_path).unlink(missing_ok=True)
 
     return out_file
 
@@ -94,6 +104,12 @@ def export_diagram_png(
         f.write(section.mermaid)
         mmd_path = f.name
 
+    with tempfile.NamedTemporaryFile(
+        suffix=".json", mode="w", delete=False, encoding="utf-8"
+    ) as cfg:
+        json.dump(_MMDC_CONFIG, cfg)
+        cfg_path = cfg.name
+
     try:
         subprocess.run(
             [
@@ -102,6 +118,7 @@ def export_diagram_png(
                 "-o", str(out_file),
                 "--backgroundColor", "transparent",
                 "--scale", str(scale),
+                "--configFile", cfg_path,
             ],
             check=True,
             capture_output=True,
@@ -109,6 +126,7 @@ def export_diagram_png(
         )
     finally:
         Path(mmd_path).unlink(missing_ok=True)
+        Path(cfg_path).unlink(missing_ok=True)
 
     return out_file
 

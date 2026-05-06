@@ -56,6 +56,9 @@ def test_export_diagram_pdf_calls_mmdc(section, tmp_path):
     assert call_args[0] == "/usr/local/bin/mmdc"
     assert call_args[2].endswith(".mmd")  # -i <tempfile>
     assert call_args[4] == str(tmp_path / "class_diagram.pdf")  # -o <outfile>
+    assert "--configFile" in call_args
+    cfg_idx = call_args.index("--configFile")
+    assert call_args[cfg_idx + 1].endswith(".json")
 
 
 def test_export_diagram_pdf_writes_mermaid_to_temp_file(section, tmp_path):
@@ -169,6 +172,9 @@ def test_export_diagram_png_calls_mmdc_with_transparent_bg(tmp_path):
     assert "--scale" in cmd
     assert "3" in cmd
     assert str(out) in cmd
+    assert "--configFile" in cmd
+    cfg_idx = cmd.index("--configFile")
+    assert cmd[cfg_idx + 1].endswith(".json")
 
 
 def test_export_diagram_png_output_extension_is_png(tmp_path):
