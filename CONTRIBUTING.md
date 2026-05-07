@@ -32,7 +32,7 @@ ruff format .
 ```
 spartastruct/
   analyzer/       # AST parsing (base.py data model, python_analyzer.py)
-  diagrams/       # Six static Mermaid generators
+  diagrams/       # 11 static Mermaid generators
   llm/            # LLM enrichment (client.py, prompts.py)
   renderer/       # Markdown renderer (markdown_renderer.py)
   templates/      # Jinja2 output template (structure.md.j2)

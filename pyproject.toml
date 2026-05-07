@@ -7,7 +7,7 @@ name = "spartastruct"
 version = "0.2.1"
 description = "Instant architecture diagrams for any Python, JavaScript, or TypeScript project"
 readme = "README.md"
-license = { text = "MIT" }
+license = "MIT"
 authors = [{ name = "Yash Randive", email = "yash.randive11@gmail.com" }]
 keywords = ["architecture", "diagrams", "mermaid", "code-analysis", "documentation"]
 classifiers = [
