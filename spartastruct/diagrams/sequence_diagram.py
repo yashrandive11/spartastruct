@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from spartastruct.analyzer.base import AnalysisResult
 
-_INIT = '%%{init: {"maxTextSize": 200000} }%%'
-
 
 def generate(result: AnalysisResult) -> str:
     """Generate a Mermaid sequenceDiagram showing component interaction flow.
@@ -19,14 +17,14 @@ def generate(result: AnalysisResult) -> str:
     Returns:
         A Mermaid sequenceDiagram string (without fences).
     """
-    lines = [_INIT, "sequenceDiagram"]
+    lines = ['%%{init: {"maxTextSize": 200000} }%%', "sequenceDiagram"]
     lines.append("    participant Client")
 
     routes = result.all_routes
     frameworks = result.frameworks
     is_web = any(f in frameworks for f in ["FastAPI", "Flask", "Django", "Express", "NestJS"])
 
-    if not routes and not is_web:
+    if not routes:
         # Generic fallback
         lines.append("    participant App")
         lines.append("    participant Logic")
@@ -63,6 +61,13 @@ def generate(result: AnalysisResult) -> str:
     if result.orm_models:
         lines.append("    participant DB")
 
+    # Pre-compute service and repo references once
+    svc_name = service_classes[0].name if service_classes else None
+    svc_method = "process()"
+    if service_classes and service_classes[0].methods:
+        svc_method = f"{service_classes[0].methods[0].name}()"
+    repo_name = repo_classes[0].name if repo_classes else None
+
     shown_paths: set[str] = set()
     for route in routes:
         key = f"{route.method}:{route.path}"
@@ -70,25 +75,19 @@ def generate(result: AnalysisResult) -> str:
             continue
         shown_paths.add(key)
 
-        lines.append(f"    Note over Client,Router: {route.method} {route.path}")
         lines.append(f"    Client->>Router: {route.method} {route.path}")
         lines.append(f"    Router->>Router: {route.handler_name}()")
 
-        if service_classes:
-            svc = service_classes[0].name
-            svc_method = "process()"
-            if service_classes[0].methods:
-                svc_method = f"{service_classes[0].methods[0].name}()"
-            lines.append(f"    Router->>{svc}: {svc_method}")
-            if repo_classes:
-                repo = repo_classes[0].name
+        if svc_name:
+            lines.append(f"    Router->>{svc_name}: {svc_method}")
+            if repo_name:
                 repo_method = "find()" if "GET" in route.method else "save()"
-                lines.append(f"    {svc}->>{repo}: {repo_method}")
+                lines.append(f"    {svc_name}->>{repo_name}: {repo_method}")
                 if result.orm_models:
-                    lines.append(f"    {repo}->>DB: SQL query")
-                    lines.append(f"    DB-->>{repo}: rows")
-                lines.append(f"    {repo}-->>{svc}: data")
-            lines.append(f"    {svc}->>Router: result")
+                    lines.append(f"    {repo_name}->>DB: SQL query")
+                    lines.append(f"    DB-->>{repo_name}: rows")
+                lines.append(f"    {repo_name}-->>{svc_name}: data")
+            lines.append(f"    {svc_name}->>Router: result")
         elif result.orm_models:
             lines.append("    Router->>DB: SQL query")
             lines.append("    DB-->>Router: rows")
