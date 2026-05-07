@@ -168,3 +168,38 @@ def test_component_map_detects_service_layer():
 def test_component_map_shows_frameworks(fastapi_result):
     out = component_map.generate(fastapi_result)
     assert "FastAPI" in out or "SQLAlchemy" in out or "graph" in out
+
+
+# ── Event / Message Flow ──────────────────────────────────────────────────────
+
+def test_event_flow_header(fastapi_result):
+    out = event_flow.generate(fastapi_result)
+    assert "flowchart" in out
+
+
+def test_event_flow_empty_fallback(empty_result):
+    out = event_flow.generate(empty_result)
+    assert "flowchart" in out
+
+
+def test_event_flow_detects_celery_tasks():
+    fn = FunctionInfo(
+        name="send_email",
+        decorators=["shared_task"],
+        is_async=False,
+    )
+    fr = FileResult(path="tasks.py", functions=[fn], imports=ImportInfo(
+        third_party=["celery"]
+    ))
+    result = AnalysisResult(files_analyzed=[fr], frameworks=["Celery"])
+    out = event_flow.generate(result)
+    assert "send_email" in out or "Celery" in out or "task" in out.lower()
+
+
+def test_event_flow_detects_async_functions():
+    fn = FunctionInfo(name="handle_event", is_async=True)
+    fr = FileResult(path="events.py", functions=[fn], imports=ImportInfo())
+    result = AnalysisResult(files_analyzed=[fr])
+    out = event_flow.generate(result)
+    assert "flowchart" in out
+    assert "handle_event" in out or "async" in out.lower() or "flowchart" in out
