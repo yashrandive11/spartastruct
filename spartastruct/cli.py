@@ -14,12 +14,17 @@ from spartastruct.analyzer.js_analyzer import JsAnalyzer
 from spartastruct.analyzer.python_analyzer import PythonAnalyzer
 from spartastruct.config import Config, load_config, save_config
 from spartastruct.diagrams import (
+    api_map,
     class_diagram,
+    component_map,
     dfd,
     er_diagram,
+    event_flow,
     flowchart,
     function_graph,
     module_graph,
+    sequence_diagram,
+    state_diagram,
 )
 from spartastruct.llm.client import call_llm_for_diagram, get_llm_failures
 from spartastruct.renderer.markdown_renderer import make_sections
@@ -35,6 +40,11 @@ _GENERATORS = {
     "flowchart": flowchart.generate,
     "function_graph": function_graph.generate,
     "module_graph": module_graph.generate,
+    "sequence_diagram": sequence_diagram.generate,
+    "state_diagram": state_diagram.generate,
+    "api_map": api_map.generate,
+    "component_map": component_map.generate,
+    "event_flow": event_flow.generate,
 }
 
 _JS_TS_EXTENSIONS = frozenset({".js", ".ts", ".jsx", ".tsx"})
@@ -202,7 +212,7 @@ def analyze(  # noqa: PLR0913
             f"Frameworks: {', '.join(result.frameworks) or 'none detected'}",
         ]
         if result.llm_calls_succeeded:
-            summary_lines.append(f"LLM enrichments: {result.llm_calls_succeeded}/6")
+            summary_lines.append(f"LLM enrichments: {result.llm_calls_succeeded}/11")
         if failures:
             summary_lines.append(f"[yellow]LLM warnings: {len(failures)} failure(s)[/yellow]")
             for msg in failures:

@@ -9,7 +9,7 @@ from spartastruct.renderer.markdown_renderer import DiagramSection, make_section
 def test_make_sections_static_only():
     static = {"class_diagram": 'classDiagram\n    note "test"', "er_diagram": "erDiagram"}
     sections = make_sections(static)
-    assert len(sections) == 6
+    assert len(sections) == 11
     cd = next(s for s in sections if s.key == "class_diagram")
     assert cd.title == "Class Diagram"
     assert cd.mermaid == 'classDiagram\n    note "test"'

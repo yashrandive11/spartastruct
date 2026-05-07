@@ -203,3 +203,57 @@ def test_event_flow_detects_async_functions():
     out = event_flow.generate(result)
     assert "flowchart" in out
     assert "handle_event" in out or "async" in out.lower() or "flowchart" in out
+
+
+# ── Wiring ────────────────────────────────────────────────────────────────────
+
+def test_all_new_generators_are_callable(fastapi_result):
+    """All five new generators must return a non-empty string."""
+    from spartastruct.diagrams import (
+        api_map,
+        component_map,
+        event_flow,
+        sequence_diagram,
+        state_diagram,
+    )
+    generators = [
+        sequence_diagram.generate,
+        state_diagram.generate,
+        api_map.generate,
+        component_map.generate,
+        event_flow.generate,
+    ]
+    for gen in generators:
+        out = gen(fastapi_result)
+        assert isinstance(out, str) and len(out) > 0, f"{gen.__module__} returned empty"
+
+
+def test_all_new_diagram_keys_in_generators():
+    """All five new diagram keys must be registered in CLI _GENERATORS."""
+    from spartastruct.cli import _GENERATORS
+    expected_keys = {
+        "sequence_diagram", "state_diagram", "api_map",
+        "component_map", "event_flow",
+    }
+    assert expected_keys.issubset(set(_GENERATORS.keys()))
+
+
+def test_all_new_diagram_keys_in_renderer():
+    """All five new diagram keys must appear in markdown renderer."""
+    from spartastruct.renderer.markdown_renderer import _DIAGRAM_TITLES, _DIAGRAM_ORDER
+    expected_keys = {
+        "sequence_diagram", "state_diagram", "api_map",
+        "component_map", "event_flow",
+    }
+    assert expected_keys.issubset(set(_DIAGRAM_TITLES.keys()))
+    assert expected_keys.issubset(set(_DIAGRAM_ORDER))
+
+
+def test_all_new_diagram_keys_in_llm_prompts():
+    """All five new diagram keys must have LLM prompts registered."""
+    from spartastruct.llm.prompts import DIAGRAM_PROMPTS
+    expected_keys = {
+        "sequence_diagram", "state_diagram", "api_map",
+        "component_map", "event_flow",
+    }
+    assert expected_keys.issubset(set(DIAGRAM_PROMPTS.keys()))

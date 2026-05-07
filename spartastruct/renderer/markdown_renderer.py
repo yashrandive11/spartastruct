@@ -26,6 +26,11 @@ _DIAGRAM_TITLES: dict[str, str] = {
     "flowchart": "Application Logic",
     "function_graph": "Function Call Graph",
     "module_graph": "Module Dependency Graph",
+    "sequence_diagram": "Sequence Diagram",
+    "state_diagram": "State Diagram",
+    "api_map": "API Endpoint Map",
+    "component_map": "Component Map",
+    "event_flow": "Event & Message Flow",
 }
 
 _DIAGRAM_ORDER = [
@@ -35,6 +40,11 @@ _DIAGRAM_ORDER = [
     "flowchart",
     "function_graph",
     "module_graph",
+    "sequence_diagram",
+    "state_diagram",
+    "api_map",
+    "component_map",
+    "event_flow",
 ]
 
 
