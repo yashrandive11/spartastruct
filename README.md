@@ -82,7 +82,7 @@ SpartaStruct works in four stages:
 1. **Walk** — finds every source file in your project, skipping `node_modules`, `venv`, `__pycache__`, build artifacts, etc.
 2. **Analyze** — parses each file statically (no code is executed). Extracts classes, functions, routes, database models, imports, and call relationships.
 3. **Enrich** (optional) — sends the analysis to an LLM, which improves the diagram and adds a plain-English description.
-4. **Export** — converts each Mermaid diagram to a PDF or PNG using the `mmdc` CLI tool.
+4. **Export** — converts each Mermaid diagram to a PDF or PNG using the Mermaid CLI, invoked automatically via `npx` (no separate install needed).
 
 ---
 
