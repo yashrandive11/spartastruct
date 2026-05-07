@@ -84,7 +84,7 @@ def export_all_pdfs(
     Args:
         sections: DiagramSections to export (empty mermaid fields skipped)
         out_dir: directory to write PDFs into (must already exist)
-        mmdc_cmd: mmdc command as a list (e.g. ["mmdc"] or ["npx", "--yes", "@mermaid-js/mermaid-cli"])
+        mmdc_cmd: command list — ["mmdc"] for global install, or ["npx", "--yes", "..."] for npx
         progress_callback: optional callable receiving a status string per diagram
 
     Returns:
@@ -137,11 +137,16 @@ def export_diagram_png(
         proc = subprocess.run(
             [
                 *mmdc_cmd,
-                "-i", mmd_path,
-                "-o", str(out_file),
-                "--backgroundColor", "transparent",
-                "--scale", str(scale),
-                "--configFile", cfg_path,
+                "-i",
+                mmd_path,
+                "-o",
+                str(out_file),
+                "--backgroundColor",
+                "transparent",
+                "--scale",
+                str(scale),
+                "--configFile",
+                cfg_path,
             ],
             check=False,
             capture_output=True,

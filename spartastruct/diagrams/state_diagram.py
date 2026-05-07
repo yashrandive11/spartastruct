@@ -6,11 +6,32 @@ from spartastruct.analyzer.base import AnalysisResult, ClassInfo
 
 _STATE_ATTR_NAMES = frozenset({"status", "state", "stage", "phase", "mode", "step"})
 
-_TRANSITION_KEYWORDS = frozenset({
-    "approve", "reject", "cancel", "activate", "deactivate", "start", "stop",
-    "complete", "fail", "pause", "resume", "submit", "publish", "archive",
-    "open", "close", "enable", "disable", "lock", "unlock", "process", "finish",
-})
+_TRANSITION_KEYWORDS = frozenset(
+    {
+        "approve",
+        "reject",
+        "cancel",
+        "activate",
+        "deactivate",
+        "start",
+        "stop",
+        "complete",
+        "fail",
+        "pause",
+        "resume",
+        "submit",
+        "publish",
+        "archive",
+        "open",
+        "close",
+        "enable",
+        "disable",
+        "lock",
+        "unlock",
+        "process",
+        "finish",
+    }
+)
 
 
 def _has_state_field(cls: ClassInfo) -> bool:
@@ -18,10 +39,7 @@ def _has_state_field(cls: ClassInfo) -> bool:
 
 
 def _transition_methods(cls: ClassInfo) -> list[str]:
-    return [
-        m.name for m in cls.methods
-        if any(kw in m.name.lower() for kw in _TRANSITION_KEYWORDS)
-    ]
+    return [m.name for m in cls.methods if any(kw in m.name.lower() for kw in _TRANSITION_KEYWORDS)]
 
 
 def generate(result: AnalysisResult) -> str:

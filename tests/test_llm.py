@@ -10,7 +10,6 @@ from spartastruct.analyzer.base import AnalysisResult, ClassInfo, FileResult, Im
 from spartastruct.llm.client import (
     _MAX_CLASSES,
     _MAX_FILES,
-    _MAX_ROUTES,
     _parse_llm_response,
     _result_to_json,
     call_llm,
@@ -52,6 +51,7 @@ def test_parse_llm_response_strips_whitespace():
 
 def test_call_llm_retries_on_rate_limit_then_succeeds():
     from unittest.mock import MagicMock
+
     success_response = MagicMock()
     success_response.choices[0].message.content = "ok"
     calls = []
@@ -72,9 +72,10 @@ def test_call_llm_retries_on_rate_limit_then_succeeds():
 
 
 def test_call_llm_gives_up_after_max_retries():
-    with patch("litellm.completion", side_effect=litellm.RateLimitError(
-        "rate limit", llm_provider="anthropic", model="haiku"
-    )):
+    with patch(
+        "litellm.completion",
+        side_effect=litellm.RateLimitError("rate limit", llm_provider="anthropic", model="haiku"),
+    ):
         with patch("time.sleep"):
             result = call_llm("prompt", "system", "model", {})
 
@@ -105,6 +106,7 @@ def test_result_to_json_small_project_no_truncation_note():
 def test_result_to_json_caps_files():
     result = _make_result(n_files=_MAX_FILES + 50)
     import json
+
     data = json.loads(_result_to_json(result))
     assert len(data["files"]) == _MAX_FILES
     assert "note" in data
@@ -113,6 +115,7 @@ def test_result_to_json_caps_files():
 def test_result_to_json_caps_classes():
     result = _make_result(n_files=1, n_classes=_MAX_CLASSES + 20)
     import json
+
     data = json.loads(_result_to_json(result))
     assert len(data["classes"]) == _MAX_CLASSES
     assert "note" in data

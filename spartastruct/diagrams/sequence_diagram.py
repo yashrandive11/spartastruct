@@ -22,7 +22,7 @@ def generate(result: AnalysisResult) -> str:
 
     routes = result.all_routes
     frameworks = result.frameworks
-    is_web = any(f in frameworks for f in ["FastAPI", "Flask", "Django", "Express", "NestJS"])
+    _ = any(f in frameworks for f in ["FastAPI", "Flask", "Django", "Express", "NestJS"])
 
     if not routes:
         # Generic fallback
@@ -42,14 +42,20 @@ def generate(result: AnalysisResult) -> str:
     lines.append("    participant Router")
 
     service_classes = [
-        c for c in result.all_classes
-        if "service" in c.name.lower() or "handler" in c.name.lower()
-        or "controller" in c.name.lower() or "manager" in c.name.lower()
+        c
+        for c in result.all_classes
+        if "service" in c.name.lower()
+        or "handler" in c.name.lower()
+        or "controller" in c.name.lower()
+        or "manager" in c.name.lower()
     ]
     repo_classes = [
-        c for c in result.all_classes
-        if "repo" in c.name.lower() or "repository" in c.name.lower()
-        or "dao" in c.name.lower() or "store" in c.name.lower()
+        c
+        for c in result.all_classes
+        if "repo" in c.name.lower()
+        or "repository" in c.name.lower()
+        or "dao" in c.name.lower()
+        or "store" in c.name.lower()
     ]
 
     if service_classes:

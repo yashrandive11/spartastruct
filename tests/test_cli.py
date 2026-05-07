@@ -26,12 +26,15 @@ def runner():
 @pytest.fixture(autouse=True)
 def mock_mmdc():
     """Auto-mock mmdc for every CLI test so they pass without mmdc installed."""
-    with patch(
-        "spartastruct.renderer.pdf_exporter.shutil.which",
-        return_value=_MOCK_MMDC,
-    ), patch(
-        "spartastruct.renderer.pdf_exporter.subprocess.run",
-        return_value=MagicMock(returncode=0),
+    with (
+        patch(
+            "spartastruct.renderer.pdf_exporter.shutil.which",
+            return_value=_MOCK_MMDC,
+        ),
+        patch(
+            "spartastruct.renderer.pdf_exporter.subprocess.run",
+            return_value=MagicMock(returncode=0),
+        ),
     ):
         yield
 

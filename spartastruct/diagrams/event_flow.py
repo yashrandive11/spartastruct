@@ -6,21 +6,35 @@ from pathlib import Path
 
 from spartastruct.analyzer.base import AnalysisResult, FunctionInfo, MethodInfo
 
-_TASK_DECORATORS = frozenset({
-    "task", "shared_task", "celery_task", "app.task", "huey.task",
-    "dramatiq.actor", "rq.job",
-})
-_EVENT_CALL_NAMES = frozenset({
-    "emit", "publish", "dispatch", "send", "send_task", "delay",
-    "apply_async", "trigger", "broadcast", "notify",
-})
+_TASK_DECORATORS = frozenset(
+    {
+        "task",
+        "shared_task",
+        "celery_task",
+        "app.task",
+        "huey.task",
+        "dramatiq.actor",
+        "rq.job",
+    }
+)
+_EVENT_CALL_NAMES = frozenset(
+    {
+        "emit",
+        "publish",
+        "dispatch",
+        "send",
+        "send_task",
+        "delay",
+        "apply_async",
+        "trigger",
+        "broadcast",
+        "notify",
+    }
+)
 
 
 def _is_task(fn: FunctionInfo | MethodInfo) -> bool:
-    return any(
-        any(td in dec.lower() for td in _TASK_DECORATORS)
-        for dec in fn.decorators
-    )
+    return any(any(td in dec.lower() for td in _TASK_DECORATORS) for dec in fn.decorators)
 
 
 def _emits_events(fn: FunctionInfo | MethodInfo) -> bool:

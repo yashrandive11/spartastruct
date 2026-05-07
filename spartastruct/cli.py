@@ -73,7 +73,7 @@ def _detect_extensions(project_path: Path) -> frozenset[str]:
 
 @click.group()
 def main() -> None:
-    """SpartaStruct — instant architecture diagrams for any Python, JavaScript, or TypeScript project."""
+    """SpartaStruct — instant architecture diagrams for any Python, JavaScript, or TypeScript project."""  # noqa: E501
 
 
 @main.command()

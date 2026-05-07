@@ -36,7 +36,8 @@ def empty_section():
 
 
 def test_find_mmdc_returns_mmdc_when_present():
-    with patch("spartastruct.renderer.pdf_exporter.shutil.which", return_value="/usr/local/bin/mmdc"):
+    patch_target = "spartastruct.renderer.pdf_exporter.shutil.which"
+    with patch(patch_target, return_value="/usr/local/bin/mmdc"):
         result = find_mmdc()
     assert result == ["mmdc"]
 

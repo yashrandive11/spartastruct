@@ -217,7 +217,7 @@ def test_module_graph_deduplicates_edges():
     fr_b = FileResult(path="b.py")
     result = AnalysisResult(files_analyzed=[fr_a, fr_b])
     out = module_graph.generate(result)
-    edge_lines = [l.strip() for l in out.splitlines() if "-->" in l and "%%{" not in l]
+    edge_lines = [line.strip() for line in out.splitlines() if "-->" in line and "%%{" not in line]
     assert edge_lines.count("mod0 --> mod1") == 1
 
 
@@ -258,8 +258,7 @@ def test_function_graph_cap_applies_to_methods():
     # For method-to-method resolution, calls must use the qualified "ClassName.method"
     # key because function_graph looks up callee via node_ids.get(call).
     callee_methods = [
-        MethodInfo(name=f"callee_{i}", is_async=False, calls=[], decorators=[])
-        for i in range(12)
+        MethodInfo(name=f"callee_{i}", is_async=False, calls=[], decorators=[]) for i in range(12)
     ]
     caller_method = MethodInfo(
         name="caller",

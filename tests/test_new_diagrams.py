@@ -14,7 +14,6 @@ from spartastruct.analyzer.base import (
     FunctionInfo,
     ImportInfo,
     MethodInfo,
-    ParamInfo,
     RouteInfo,
 )
 from spartastruct.analyzer.python_analyzer import PythonAnalyzer
@@ -43,6 +42,7 @@ def fastapi_result():
 
 # ── Sequence Diagram ──────────────────────────────────────────────────────────
 
+
 def test_sequence_diagram_header(fastapi_result):
     out = sequence_diagram.generate(fastapi_result)
     assert "sequenceDiagram" in out
@@ -65,6 +65,7 @@ def test_sequence_diagram_empty_fallback(empty_result):
 
 
 # ── State Diagram ─────────────────────────────────────────────────────────────
+
 
 def test_state_diagram_header(fastapi_result):
     out = state_diagram.generate(fastapi_result)
@@ -112,6 +113,7 @@ def test_state_diagram_transition_methods():
 
 # ── API Endpoint Map ──────────────────────────────────────────────────────────
 
+
 def test_api_map_header(fastapi_result):
     out = api_map.generate(fastapi_result)
     assert "flowchart" in out
@@ -143,6 +145,7 @@ def test_api_map_groups_by_resource():
 
 # ── Component / Service Map ───────────────────────────────────────────────────
 
+
 def test_component_map_header(fastapi_result):
     out = component_map.generate(fastapi_result)
     assert "graph" in out
@@ -172,6 +175,7 @@ def test_component_map_shows_frameworks(fastapi_result):
 
 # ── Event / Message Flow ──────────────────────────────────────────────────────
 
+
 def test_event_flow_header(fastapi_result):
     out = event_flow.generate(fastapi_result)
     assert "flowchart" in out
@@ -188,9 +192,7 @@ def test_event_flow_detects_celery_tasks():
         decorators=["shared_task"],
         is_async=False,
     )
-    fr = FileResult(path="tasks.py", functions=[fn], imports=ImportInfo(
-        third_party=["celery"]
-    ))
+    fr = FileResult(path="tasks.py", functions=[fn], imports=ImportInfo(third_party=["celery"]))
     result = AnalysisResult(files_analyzed=[fr], frameworks=["Celery"])
     out = event_flow.generate(result)
     assert "send_email" in out or "Celery" in out or "task" in out.lower()
@@ -207,6 +209,7 @@ def test_event_flow_detects_async_functions():
 
 # ── Wiring ────────────────────────────────────────────────────────────────────
 
+
 def test_all_new_generators_are_callable(fastapi_result):
     """All five new generators must return a non-empty string."""
     from spartastruct.diagrams import (
@@ -216,6 +219,7 @@ def test_all_new_generators_are_callable(fastapi_result):
         sequence_diagram,
         state_diagram,
     )
+
     generators = [
         sequence_diagram.generate,
         state_diagram.generate,
@@ -231,19 +235,27 @@ def test_all_new_generators_are_callable(fastapi_result):
 def test_all_new_diagram_keys_in_generators():
     """All five new diagram keys must be registered in CLI _GENERATORS."""
     from spartastruct.cli import _GENERATORS
+
     expected_keys = {
-        "sequence_diagram", "state_diagram", "api_map",
-        "component_map", "event_flow",
+        "sequence_diagram",
+        "state_diagram",
+        "api_map",
+        "component_map",
+        "event_flow",
     }
     assert expected_keys.issubset(set(_GENERATORS.keys()))
 
 
 def test_all_new_diagram_keys_in_renderer():
     """All five new diagram keys must appear in markdown renderer."""
-    from spartastruct.renderer.markdown_renderer import _DIAGRAM_TITLES, _DIAGRAM_ORDER
+    from spartastruct.renderer.markdown_renderer import _DIAGRAM_ORDER, _DIAGRAM_TITLES
+
     expected_keys = {
-        "sequence_diagram", "state_diagram", "api_map",
-        "component_map", "event_flow",
+        "sequence_diagram",
+        "state_diagram",
+        "api_map",
+        "component_map",
+        "event_flow",
     }
     assert expected_keys.issubset(set(_DIAGRAM_TITLES.keys()))
     assert expected_keys.issubset(set(_DIAGRAM_ORDER))
@@ -252,8 +264,12 @@ def test_all_new_diagram_keys_in_renderer():
 def test_all_new_diagram_keys_in_llm_prompts():
     """All five new diagram keys must have LLM prompts registered."""
     from spartastruct.llm.prompts import DIAGRAM_PROMPTS
+
     expected_keys = {
-        "sequence_diagram", "state_diagram", "api_map",
-        "component_map", "event_flow",
+        "sequence_diagram",
+        "state_diagram",
+        "api_map",
+        "component_map",
+        "event_flow",
     }
     assert expected_keys.issubset(set(DIAGRAM_PROMPTS.keys()))

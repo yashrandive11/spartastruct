@@ -112,17 +112,21 @@ def _classify_import(module_path: str) -> tuple[str, str]:
 def _extract_routes(source: str) -> list[RouteInfo]:
     routes: list[RouteInfo] = []
     for m in _EXPRESS_ROUTE_RE.finditer(source):
-        routes.append(RouteInfo(
-            method=m.group(1).upper(),
-            path=m.group(2),
-            handler_name="handler",
-        ))
+        routes.append(
+            RouteInfo(
+                method=m.group(1).upper(),
+                path=m.group(2),
+                handler_name="handler",
+            )
+        )
     for m in _NESTJS_ROUTE_RE.finditer(source):
-        routes.append(RouteInfo(
-            method=m.group(1).upper(),
-            path=m.group(2) or "/",
-            handler_name="handler",
-        ))
+        routes.append(
+            RouteInfo(
+                method=m.group(1).upper(),
+                path=m.group(2) or "/",
+                handler_name="handler",
+            )
+        )
     return routes
 
 
@@ -221,10 +225,7 @@ class JsAnalyzer:
             except Exception as exc:  # noqa: BLE001
                 warnings.append(f"Failed to analyze {file_path.name}: {exc}")
 
-        entry_points = [
-            fr.path for fr in file_results
-            if Path(fr.path).name in _JS_ENTRY_NAMES
-        ]
+        entry_points = [fr.path for fr in file_results if Path(fr.path).name in _JS_ENTRY_NAMES]
 
         return AnalysisResult(
             files_analyzed=file_results,

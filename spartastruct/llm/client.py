@@ -68,7 +68,7 @@ def call_llm(
         except litellm.RateLimitError:
             if attempt == _RATE_LIMIT_RETRIES:
                 _llm_failures.append(
-                    f"Rate limit hit after {_RATE_LIMIT_RETRIES} retries — skipping diagram enrichment."
+                    f"Rate limit hit after {_RATE_LIMIT_RETRIES} retries — skipping diagram enrichment."  # noqa: E501
                 )
                 return ""
             time.sleep(delay)
