@@ -4,10 +4,10 @@
   <br/>
 
   [![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org)
-  [![JS/TS](https://img.shields.io/badge/JS%2FTS-supported-f7df1e?style=flat-square&logo=typescript&logoColor=black)](spartastruct/analyzer/js_analyzer.py)
+  [![JS/TS](https://img.shields.io/badge/JS%2FTS-supported-f7df1e?style=flat-square&logo=typescript&logoColor=black)](https://github.com/yashrandive11/spartastruct)
   [![License: MIT](https://img.shields.io/badge/License-MIT-6366f1?style=flat-square)](LICENSE)
-  [![Tests](https://img.shields.io/badge/Tests-106%20passing-22c55e?style=flat-square)](tests/)
-  [![Diagrams](https://img.shields.io/badge/Diagrams-6%20types-a855f7?style=flat-square)](spartastruct/diagrams/)
+  [![Tests](https://img.shields.io/badge/Tests-111%20passing-22c55e?style=flat-square)](tests/)
+  [![Diagrams](https://img.shields.io/badge/Diagrams-6%20types-a855f7?style=flat-square)](https://github.com/yashrandive11/spartastruct)
   [![LLM](https://img.shields.io/badge/LLM-litellm%20%E2%80%94%20any%20provider-f59e0b?style=flat-square)](https://docs.litellm.ai/)
 
   <br/>
@@ -36,7 +36,7 @@ npm install -g @mermaid-js/mermaid-cli
 **Step 2 — Run it on your project**
 
 ```bash
-spartastruct analyze /path/to/your/python/project --no-llm
+spartastruct analyze /path/to/your/project --no-llm
 ```
 
 That's it. Six PDF files appear in a `spartadocs/` folder inside your project.
@@ -74,10 +74,10 @@ The LLM improves diagram labels, adds descriptions, and connects the dots betwee
 
 SpartaStruct works in four stages:
 
-1. **Walk** — finds every `.py` file in your project, skipping `venv`, `__pycache__`, migrations, etc.
-2. **Analyze** — reads each file using Python's AST (Abstract Syntax Tree). No code is executed. It extracts classes, functions, routes, database models, imports, and call relationships.
+1. **Walk** — finds every source file in your project, skipping `node_modules`, `venv`, `__pycache__`, build artifacts, etc.
+2. **Analyze** — parses each file statically (no code is executed). Extracts classes, functions, routes, database models, imports, and call relationships.
 3. **Enrich** (optional) — sends the analysis to an LLM, which improves the diagram and adds a plain-English description.
-4. **Export** — converts each Mermaid diagram to a PDF using the `mmdc` CLI tool.
+4. **Export** — converts each Mermaid diagram to a PDF or PNG using the `mmdc` CLI tool.
 
 ---
 
@@ -116,7 +116,7 @@ classDiagram
 
 Shows your database tables (ORM models) and the relationships between them — one-to-many, many-to-many, foreign keys, etc.
 
-Supports: **SQLAlchemy**, **Django ORM**, **Tortoise ORM**, **Peewee**.
+Supports: **SQLAlchemy**, **Django ORM**, **Tortoise ORM**, **Peewee**, **TypeORM**, **Sequelize**, **Mongoose**, **Prisma**.
 
 ```mermaid
 erDiagram
@@ -144,7 +144,7 @@ erDiagram
 
 Traces the path from an HTTP request → controller/handler → service layer → database. Particularly useful for API-heavy projects.
 
-Supports: **FastAPI**, **Flask**, **Django**.
+Supports: **FastAPI**, **Flask**, **Django**, **Express**, **NestJS**.
 
 **Useful for:** Security reviews, debugging unexpected behaviour, understanding which routes hit which tables.
 
@@ -155,7 +155,7 @@ Supports: **FastAPI**, **Flask**, **Django**.
 
 <br/>
 
-A top-down flow diagram starting from your entry points (`main()`, `run()`, CLI handlers, etc.) showing the sequence of processing.
+A top-down flow diagram starting from your entry points (`main()`, `run()`, CLI handlers, index files, etc.) showing the sequence of processing.
 
 **Useful for:** Explaining app logic to stakeholders, spotting dead code, documenting workflows.
 
@@ -170,8 +170,8 @@ A left-to-right call graph grouping functions by file. Async functions are highl
 
 ```mermaid
 graph LR
-    subgraph main["main.py"]
-        fn0["async handle_request()"]:::async
+    subgraph main["main.ts"]
+        fn0["async handleRequest()"]:::async
         fn1["validate()"]
         fn2["save()"]
         fn0 --> fn1
@@ -301,7 +301,7 @@ spartastruct analyze /path/to/project
 
 ## Supported Languages
 
-SpartaStruct auto-detects your project's primary language and picks the right analyzer. For polyglot projects (e.g. a Python API with a TypeScript frontend in the same repo), both analyzers run and results are merged into a single set of diagrams.
+SpartaStruct auto-detects your project's primary language and picks the right analyzer. For polyglot projects (e.g. an API backend with a TypeScript frontend in the same repo), both analyzers run and results are merged into a single set of diagrams.
 
 | Language | Extensions | Analyzer |
 |----------|-----------|---------|
@@ -311,7 +311,7 @@ SpartaStruct auto-detects your project's primary language and picks the right an
 
 **Detected JS/TS frameworks:** Express, NestJS, Next.js, React, Vue, Angular, Nuxt, TypeORM, Sequelize, Mongoose, Prisma, GraphQL, Apollo, Socket.IO, Axios, Jest, Vitest, RxJS
 
-**How auto-detection works:** SpartaStruct counts `.py` vs JS/TS files in your project. Python-only → Python analyzer. JS/TS-only → JS/TS analyzer. Both present → both analyzers run and results are merged.
+**How auto-detection works:** SpartaStruct counts source files by language. Single-language projects use the matching analyzer. Mixed projects run both and merge the results.
 
 ---
 
@@ -321,13 +321,15 @@ SpartaStruct auto-detects which frameworks your project uses and includes that i
 
 | Category | Frameworks |
 |----------|-----------|
-| **Web** | FastAPI, Flask, Django |
-| **Database / ORM** | SQLAlchemy, Django ORM, Tortoise ORM, Peewee, Alembic |
+| **Web (Python)** | FastAPI, Flask, Django |
+| **Web (JS/TS)** | Express, NestJS, Next.js |
+| **Database / ORM** | SQLAlchemy, Django ORM, Tortoise ORM, Peewee, Alembic, TypeORM, Sequelize, Mongoose, Prisma |
 | **Task Queues** | Celery |
 | **Validation** | Pydantic |
-| **Testing** | Pytest |
-| **HTTP Clients** | Requests, HTTPX |
+| **Testing** | Pytest, Jest, Vitest |
+| **HTTP Clients** | Requests, HTTPX, Axios |
 | **Data Science** | NumPy, Pandas, PyTorch, TensorFlow |
+| **Frontend** | React, Vue, Angular, Nuxt |
 
 Detection is automatic — you don't need to tell SpartaStruct which frameworks you use.
 
@@ -341,7 +343,7 @@ Detection is automatic — you don't need to tell SpartaStruct which frameworks 
 | Node.js | 18+ | [nodejs.org](https://nodejs.org) |
 | Mermaid CLI (`mmdc`) | latest | `npm install -g @mermaid-js/mermaid-cli` |
 
-> `mmdc` is only needed for PDF export. The analysis and diagram generation work without it.
+> `mmdc` is only needed for PDF/PNG export. The analysis and diagram generation work without it.
 
 ---
 
@@ -366,7 +368,8 @@ openai = "sk-..."
 spartastruct/
 ├── analyzer/
 │   ├── base.py              # data types: FileResult, ClassInfo, FunctionInfo, etc.
-│   └── python_analyzer.py   # AST walking, class/function/route extraction
+│   ├── python_analyzer.py   # AST-based analyzer for Python
+│   └── js_analyzer.py       # regex-based analyzer for JavaScript / TypeScript
 ├── diagrams/
 │   ├── class_diagram.py     # classDiagram generator
 │   ├── er_diagram.py        # erDiagram generator
@@ -375,13 +378,13 @@ spartastruct/
 │   ├── function_graph.py    # function call graph generator
 │   └── module_graph.py      # module dependency graph generator
 ├── llm/
-│   ├── client.py            # litellm wrapper, failure tracking
+│   ├── client.py            # litellm wrapper, failure tracking, retry logic
 │   └── prompts.py           # system prompts per diagram type
 ├── renderer/
 │   ├── markdown_renderer.py # assembles sections from diagram results
-│   └── pdf_exporter.py      # calls mmdc to convert Mermaid → PDF
+│   └── pdf_exporter.py      # calls mmdc to convert Mermaid → PDF/PNG
 ├── utils/
-│   ├── file_walker.py       # finds .py files, respects ignore patterns
+│   ├── file_walker.py       # finds source files, respects ignore patterns
 │   └── framework_detector.py# detects frameworks from imports
 ├── templates/
 │   └── structure.md.j2      # Jinja2 template for markdown layout
@@ -392,8 +395,6 @@ spartastruct/
 ---
 
 ## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and guidelines.
 
 ```bash
 git clone https://github.com/yashrandive11/spartastruct

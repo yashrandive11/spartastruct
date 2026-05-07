@@ -64,7 +64,7 @@
 
   <!-- Tagline with fade-in animation -->
   <text x="222" y="112" font-family="'Segoe UI', system-ui, sans-serif" font-size="15" fill="#94a3b8" letter-spacing="0.5">
-    Instant architecture diagrams for any Python codebase
+    Instant architecture diagrams for any codebase
     <animate attributeName="opacity" values="0;1" dur="1.5s" fill="freeze"/>
   </text>
 
