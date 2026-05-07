@@ -15,7 +15,8 @@ class DiagramSection:
     key: str  # "class_diagram", "er_diagram", etc.
     title: str  # "Class Diagram"
     description: str  # from LLM or ""
-    mermaid: str  # Mermaid source (no fences)
+    mermaid: str  # Mermaid source — LLM-enriched when available
+    static_mermaid: str = ""  # original static diagram, used as fallback on render failure
 
 
 _DIAGRAM_TITLES: dict[str, str] = {
@@ -60,6 +61,7 @@ def make_sections(
                 title=_DIAGRAM_TITLES[key],
                 description=description,
                 mermaid=mermaid,
+                static_mermaid=static,
             )
         )
     return sections

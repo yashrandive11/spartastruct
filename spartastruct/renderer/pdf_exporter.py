@@ -9,7 +9,7 @@ import tempfile
 from collections.abc import Callable
 from pathlib import Path
 
-from spartastruct.renderer.markdown_renderer import DiagramSection
+from spartastruct.renderer.markdown_renderer import DiagramSection  # noqa: F401 (also used inline)
 
 _MMDC_CONFIG = {"maxTextSize": 200000}
 
@@ -91,7 +91,20 @@ def export_all_pdfs(
             continue
         if progress_callback:
             progress_callback(f"Exporting {section.title} to PDF…")
-        out_file = export_diagram_pdf(section, out_dir, mmdc_path)
+        try:
+            out_file = export_diagram_pdf(section, out_dir, mmdc_path)
+        except RuntimeError:
+            if section.static_mermaid and section.static_mermaid != section.mermaid:
+                fallback = DiagramSection(
+                    key=section.key,
+                    title=section.title,
+                    description=section.description,
+                    mermaid=section.static_mermaid,
+                    static_mermaid=section.static_mermaid,
+                )
+                out_file = export_diagram_pdf(fallback, out_dir, mmdc_path)
+            else:
+                raise
         results.append(out_file)
     return results
 
@@ -155,6 +168,19 @@ def export_all_pngs(
             continue
         if progress_callback:
             progress_callback(f"Exporting {section.title} to PNG…")
-        out_file = export_diagram_png(section, out_dir, mmdc_path, scale=scale)
+        try:
+            out_file = export_diagram_png(section, out_dir, mmdc_path, scale=scale)
+        except RuntimeError:
+            if section.static_mermaid and section.static_mermaid != section.mermaid:
+                fallback = DiagramSection(
+                    key=section.key,
+                    title=section.title,
+                    description=section.description,
+                    mermaid=section.static_mermaid,
+                    static_mermaid=section.static_mermaid,
+                )
+                out_file = export_diagram_png(fallback, out_dir, mmdc_path, scale=scale)
+            else:
+                raise
         results.append(out_file)
     return results
