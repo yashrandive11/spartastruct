@@ -60,7 +60,11 @@ def generate(result: AnalysisResult) -> str:
         if transitions:
             prev = "Initialized"
             for method in transitions[:5]:
-                state_name = method.capitalize() + "d" if not method.endswith("e") else method[:-1].capitalize() + "ed"
+                state_name = (
+                    method[:-1].capitalize() + "ed"
+                    if method.endswith("e")
+                    else method.capitalize() + "ed"
+                )
                 lines.append(f"        {prev} --> {state_name}: {method}()")
                 prev = state_name
             lines.append(f"        {prev} --> [*]")
