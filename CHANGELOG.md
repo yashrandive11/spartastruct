@@ -11,6 +11,13 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ---
 
+## [0.2.3] — 2026-05-07
+
+### Fixed
+- `mmdc` no longer required — npx fallback now correctly shipped in the PyPI package
+
+---
+
 ## [0.2.2] — 2026-05-06
 
 ### Changed
