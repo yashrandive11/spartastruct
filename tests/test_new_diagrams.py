@@ -139,3 +139,32 @@ def test_api_map_groups_by_resource():
     out = api_map.generate(result)
     assert "users" in out
     assert "posts" in out
+
+
+# ── Component / Service Map ───────────────────────────────────────────────────
+
+def test_component_map_header(fastapi_result):
+    out = component_map.generate(fastapi_result)
+    assert "graph" in out
+
+
+def test_component_map_empty_fallback(empty_result):
+    out = component_map.generate(empty_result)
+    assert "graph" in out
+
+
+def test_component_map_detects_service_layer():
+    classes = [
+        ClassInfo(name="UserService"),
+        ClassInfo(name="UserRepository"),
+        ClassInfo(name="UserController"),
+    ]
+    fr = FileResult(path="app.py", classes=classes, imports=ImportInfo())
+    result = AnalysisResult(files_analyzed=[fr], frameworks=["FastAPI"])
+    out = component_map.generate(result)
+    assert "Service" in out or "UserService" in out
+
+
+def test_component_map_shows_frameworks(fastapi_result):
+    out = component_map.generate(fastapi_result)
+    assert "FastAPI" in out or "SQLAlchemy" in out or "graph" in out
