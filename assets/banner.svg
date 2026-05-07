@@ -81,6 +81,6 @@
     <circle cx="192" cy="0" r="3" fill="#6366f1">
       <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" begin="1s" repeatCount="indefinite"/>
     </circle>
-    <text x="202" y="4" font-family="'Segoe UI', system-ui, sans-serif" font-size="10" fill="#64748b">6 PDFs</text>
+    <text x="202" y="4" font-family="'Segoe UI', system-ui, sans-serif" font-size="10" fill="#64748b">11 PDFs/PNGs</text>
   </g>
 </svg>
