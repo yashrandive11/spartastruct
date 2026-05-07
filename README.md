@@ -271,6 +271,8 @@ spartastruct analyze /path/to/project           # analyze a specific path
 spartastruct analyze . --no-llm                 # skip LLM (fast, offline)
 spartastruct analyze . --model openai/gpt-4o    # use a different LLM
 spartastruct analyze . --output ./my-docs       # write PDFs to a custom folder
+spartastruct analyze . --format png             # export as PNG (transparent, 3× scale)
+spartastruct analyze . --format both            # export PDF and PNG
 ```
 
 | Flag | Default | What it does |
@@ -436,7 +438,12 @@ spartastruct/
 │   ├── dfd.py               # data flow diagram generator
 │   ├── flowchart.py         # flowchart generator
 │   ├── function_graph.py    # function call graph generator
-│   └── module_graph.py      # module dependency graph generator
+│   ├── module_graph.py      # module dependency graph generator
+│   ├── sequence_diagram.py  # sequenceDiagram generator
+│   ├── state_diagram.py     # stateDiagram-v2 generator
+│   ├── api_map.py           # API endpoint map generator
+│   ├── component_map.py     # component / service layer map generator
+│   └── event_flow.py        # event & message flow generator
 ├── llm/
 │   ├── client.py            # litellm wrapper, failure tracking, retry logic
 │   └── prompts.py           # system prompts per diagram type

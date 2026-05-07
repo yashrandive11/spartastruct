@@ -73,7 +73,7 @@ def _detect_extensions(project_path: Path) -> frozenset[str]:
 
 @click.group()
 def main() -> None:
-    """SpartaStruct — instant architecture diagrams for any Python codebase."""
+    """SpartaStruct — instant architecture diagrams for any Python, JavaScript, or TypeScript project."""
 
 
 @main.command()
@@ -111,7 +111,7 @@ def init() -> None:
 def analyze(  # noqa: PLR0913
     path: str, no_llm: bool, model: str | None, output: str | None, export_format: str
 ) -> None:
-    """Analyze a Python project and export each diagram as a PDF."""
+    """Analyze a project and export each diagram as a PDF or PNG."""
     from spartastruct.renderer.pdf_exporter import export_all_pdfs, export_all_pngs, find_mmdc
 
     mmdc_path = find_mmdc()
