@@ -108,3 +108,34 @@ def test_state_diagram_transition_methods():
     result = AnalysisResult(files_analyzed=[fr])
     out = state_diagram.generate(result)
     assert "start" in out or "complete" in out or "fail" in out
+
+
+# ── API Endpoint Map ──────────────────────────────────────────────────────────
+
+def test_api_map_header(fastapi_result):
+    out = api_map.generate(fastapi_result)
+    assert "flowchart" in out
+
+
+def test_api_map_shows_routes(fastapi_result):
+    out = api_map.generate(fastapi_result)
+    assert "GET" in out or "POST" in out
+
+
+def test_api_map_empty_fallback(empty_result):
+    out = api_map.generate(empty_result)
+    assert "flowchart" in out
+    assert "No routes" in out
+
+
+def test_api_map_groups_by_resource():
+    routes = [
+        RouteInfo(method="GET", path="/users", handler_name="list_users"),
+        RouteInfo(method="POST", path="/users", handler_name="create_user"),
+        RouteInfo(method="GET", path="/posts", handler_name="list_posts"),
+    ]
+    fr = FileResult(path="main.py", routes=routes, imports=ImportInfo())
+    result = AnalysisResult(files_analyzed=[fr])
+    out = api_map.generate(result)
+    assert "users" in out
+    assert "posts" in out
