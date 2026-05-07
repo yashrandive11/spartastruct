@@ -6,13 +6,13 @@
   [![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org)
   [![JS/TS](https://img.shields.io/badge/JS%2FTS-supported-f7df1e?style=flat-square&logo=typescript&logoColor=black)](https://github.com/yashrandive11/spartastruct)
   [![License: MIT](https://img.shields.io/badge/License-MIT-6366f1?style=flat-square)](LICENSE)
-  [![Tests](https://img.shields.io/badge/Tests-111%20passing-22c55e?style=flat-square)](tests/)
-  [![Diagrams](https://img.shields.io/badge/Diagrams-6%20types-a855f7?style=flat-square)](https://github.com/yashrandive11/spartastruct)
+  [![Tests](https://img.shields.io/badge/Tests-135%20passing-22c55e?style=flat-square)](tests/)
+  [![Diagrams](https://img.shields.io/badge/Diagrams-11%20types-a855f7?style=flat-square)](https://github.com/yashrandive11/spartastruct)
   [![LLM](https://img.shields.io/badge/LLM-litellm%20%E2%80%94%20any%20provider-f59e0b?style=flat-square)](https://docs.litellm.ai/)
 
   <br/>
 
-  **Point SpartaStruct at any Python, JavaScript, or TypeScript project and get 6 architecture diagrams in under a minute.**  
+  **Point SpartaStruct at any Python, JavaScript, or TypeScript project and get 11 architecture diagrams in under a minute.**  
   PDF and PNG export. Works offline. Optionally enriched by any LLM.
 
 </div>
@@ -39,7 +39,7 @@ npm install -g @mermaid-js/mermaid-cli
 spartastruct analyze /path/to/your/project --no-llm
 ```
 
-That's it. Six PDF files appear in a `spartadocs/` folder inside your project.
+That's it. Eleven PDF files appear in a `spartadocs/` folder inside your project.
 
 ```
 your-project/
@@ -49,7 +49,12 @@ your-project/
     ├── dfd.pdf                ← HTTP routes → services → database
     ├── flowchart.pdf          ← app logic and entry points
     ├── function_graph.pdf     ← which functions call which
-    └── module_graph.pdf       ← which files import which
+    ├── module_graph.pdf       ← which files import which
+    ├── sequence_diagram.pdf   ← how components interact at runtime
+    ├── state_diagram.pdf      ← state machines and transitions
+    ├── api_map.pdf            ← all HTTP routes grouped by resource
+    ├── component_map.pdf      ← service layers and dependencies
+    └── event_flow.pdf         ← async tasks and event/message flow
 ```
 
 **Step 3 — Add LLM enrichment (optional)**
@@ -81,7 +86,7 @@ SpartaStruct works in four stages:
 
 ---
 
-## The 6 Diagrams Explained
+## The 11 Diagrams Explained
 
 Each diagram answers a different question about your codebase.
 
@@ -194,6 +199,61 @@ graph LR
 A top-down dependency graph of your project's files. Local imports (your own code) are shown with solid lines. Third-party imports are shown with dashed lines.
 
 **Useful for:** Identifying circular imports, understanding coupling between modules, planning a refactor.
+
+</details>
+
+<details>
+<summary><strong>🔀 Sequence Diagram</strong> — "How do components interact at runtime?"</summary>
+
+<br/>
+
+Traces the call sequence from an HTTP request through route handlers, service methods, repository calls, and database queries. Shows participant lifelines and message arrows.
+
+**Useful for:** Code reviews, debugging request flows, onboarding new developers to understand runtime behaviour.
+
+</details>
+
+<details>
+<summary><strong>🔄 State Diagram</strong> — "What states can this object be in?"</summary>
+
+<br/>
+
+Detects classes with `status`, `state`, or `stage` attributes and methods that trigger transitions (approve, cancel, complete, etc.). Renders a nested state machine per class, falling back to a generic request lifecycle.
+
+**Useful for:** Understanding order/payment/workflow states, designing new state machines, reviewing business logic.
+
+</details>
+
+<details>
+<summary><strong>🗂️ API Endpoint Map</strong> — "What routes does this app expose?"</summary>
+
+<br/>
+
+Groups all HTTP routes by resource (first path segment). Each route shows its method, path, and handler name. Methods are colour-coded: GET (green), POST (blue), PUT/PATCH (yellow), DELETE (red).
+
+**Useful for:** API reviews, writing API documentation, spotting missing or duplicate endpoints.
+
+</details>
+
+<details>
+<summary><strong>🏗️ Component Map</strong> — "What are the logical layers of this app?"</summary>
+
+<br/>
+
+Groups classes by naming convention into Controllers, Services, Repositories, Models, and Utils layers. Draws dependency arrows between layers and shows detected external frameworks.
+
+**Useful for:** Architecture reviews, onboarding, identifying layering violations (e.g. a Controller directly accessing a Repository).
+
+</details>
+
+<details>
+<summary><strong>📨 Event & Message Flow</strong> — "How does async messaging work?"</summary>
+
+<br/>
+
+Detects Celery tasks (`@shared_task`, `@app.task`), event emitters (`emit()`, `publish()`, `dispatch()`), and async functions. Shows producers, consumers, and the message broker/bus between them.
+
+**Useful for:** Understanding background job pipelines, debugging message flow, reviewing Celery task architecture.
 
 </details>
 
