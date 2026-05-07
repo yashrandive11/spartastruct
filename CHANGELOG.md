@@ -11,6 +11,13 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ---
 
+## [0.2.2] — 2026-05-06
+
+### Changed
+- Mermaid CLI (`mmdc`) no longer needs to be installed manually. SpartaStruct now uses `npx` automatically — only Node.js is required.
+
+---
+
 ## [0.2.1] — 2026-05-06
 
 ### Changed
