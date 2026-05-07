@@ -114,11 +114,11 @@ def analyze(  # noqa: PLR0913
     """Analyze a project and export each diagram as a PDF or PNG."""
     from spartastruct.renderer.pdf_exporter import export_all_pdfs, export_all_pngs, find_mmdc
 
-    mmdc_path = find_mmdc()
-    if mmdc_path is None:
+    mmdc_cmd = find_mmdc()
+    if mmdc_cmd is None:
         raise click.ClickException(
-            "mmdc not found. Install the Mermaid CLI with:\n"
-            "  npm install -g @mermaid-js/mermaid-cli"
+            "Node.js not found. Install it from https://nodejs.org — "
+            "SpartaStruct will handle the Mermaid CLI automatically via npx."
         )
 
     cfg = load_config()
@@ -188,14 +188,14 @@ def analyze(  # noqa: PLR0913
                 pdf_files = export_all_pdfs(
                     sections,
                     out_dir,
-                    mmdc_path,
+                    mmdc_cmd,
                     progress_callback=lambda msg: progress.update(t, description=msg),
                 )
             if export_format in ("png", "both"):
                 png_files = export_all_pngs(
                     sections,
                     out_dir,
-                    mmdc_path,
+                    mmdc_cmd,
                     progress_callback=lambda msg: progress.update(t, description=msg),
                 )
 

@@ -29,8 +29,8 @@
 # Install SpartaStruct
 pip install spartastruct
 
-# Install the Mermaid CLI (needs Node.js — https://nodejs.org)
-npm install -g @mermaid-js/mermaid-cli
+# Install Node.js (https://nodejs.org) — that's it.
+# SpartaStruct uses npx to run the Mermaid CLI automatically.
 ```
 
 **Step 2 — Run it on your project**
@@ -403,9 +403,8 @@ Detection is automatic — you don't need to tell SpartaStruct which frameworks 
 |------|---------|---------|
 | Python | 3.10+ | [python.org](https://python.org) |
 | Node.js | 18+ | [nodejs.org](https://nodejs.org) |
-| Mermaid CLI (`mmdc`) | latest | `npm install -g @mermaid-js/mermaid-cli` |
 
-> `mmdc` is only needed for PDF/PNG export. The analysis and diagram generation work without it.
+> Node.js is only needed for PDF/PNG export. SpartaStruct uses `npx` to run the Mermaid CLI automatically — no separate install step required. The analysis and diagram generation work without Node.js at all.
 
 ---
 

@@ -16,6 +16,9 @@ from spartastruct.renderer.pdf_exporter import (
     find_mmdc,
 )
 
+_MMDC = ["/usr/local/bin/mmdc"]
+_NPX_MMDC = ["npx", "--yes", "@mermaid-js/mermaid-cli"]
+
 
 @pytest.fixture
 def section():
@@ -32,14 +35,22 @@ def empty_section():
     return DiagramSection(key="er_diagram", title="ER Diagram", description="", mermaid="")
 
 
-def test_find_mmdc_returns_path_when_present():
-    patch_target = "spartastruct.renderer.pdf_exporter.shutil.which"
-    with patch(patch_target, return_value="/usr/local/bin/mmdc"):
+def test_find_mmdc_returns_mmdc_when_present():
+    with patch("spartastruct.renderer.pdf_exporter.shutil.which", return_value="/usr/local/bin/mmdc"):
         result = find_mmdc()
-    assert result == "/usr/local/bin/mmdc"
+    assert result == ["mmdc"]
 
 
-def test_find_mmdc_returns_none_when_absent():
+def test_find_mmdc_falls_back_to_npx_when_mmdc_absent():
+    def which_side_effect(cmd):
+        return "/usr/bin/npx" if cmd == "npx" else None
+
+    with patch("spartastruct.renderer.pdf_exporter.shutil.which", side_effect=which_side_effect):
+        result = find_mmdc()
+    assert result == ["npx", "--yes", "@mermaid-js/mermaid-cli"]
+
+
+def test_find_mmdc_returns_none_when_neither_present():
     with patch("spartastruct.renderer.pdf_exporter.shutil.which", return_value=None):
         result = find_mmdc()
     assert result is None
@@ -48,7 +59,7 @@ def test_find_mmdc_returns_none_when_absent():
 def test_export_diagram_pdf_calls_mmdc(section, tmp_path):
     with patch("spartastruct.renderer.pdf_exporter.subprocess.run") as mock_run:
         mock_run.return_value = MagicMock(returncode=0)
-        out_file = export_diagram_pdf(section, tmp_path, "/usr/local/bin/mmdc")
+        out_file = export_diagram_pdf(section, tmp_path, _MMDC)
 
     assert out_file == tmp_path / "class_diagram.pdf"
     mock_run.assert_called_once()
@@ -61,6 +72,15 @@ def test_export_diagram_pdf_calls_mmdc(section, tmp_path):
     assert call_args[cfg_idx + 1].endswith(".json")
 
 
+def test_export_diagram_pdf_via_npx(section, tmp_path):
+    with patch("spartastruct.renderer.pdf_exporter.subprocess.run") as mock_run:
+        mock_run.return_value = MagicMock(returncode=0)
+        export_diagram_pdf(section, tmp_path, _NPX_MMDC)
+
+    call_args = mock_run.call_args[0][0]
+    assert call_args[:3] == ["npx", "--yes", "@mermaid-js/mermaid-cli"]
+
+
 def test_export_diagram_pdf_writes_mermaid_to_temp_file(section, tmp_path):
     captured_content = []
 
@@ -70,7 +90,7 @@ def test_export_diagram_pdf_writes_mermaid_to_temp_file(section, tmp_path):
         return MagicMock(returncode=0)
 
     with patch("spartastruct.renderer.pdf_exporter.subprocess.run", side_effect=fake_run):
-        export_diagram_pdf(section, tmp_path, "/usr/local/bin/mmdc")
+        export_diagram_pdf(section, tmp_path, _MMDC)
 
     assert captured_content[0] == "classDiagram\n    A --> B"
 
@@ -83,7 +103,7 @@ def test_export_diagram_pdf_cleans_up_temp_file(section, tmp_path):
         return MagicMock(returncode=0)
 
     with patch("spartastruct.renderer.pdf_exporter.subprocess.run", side_effect=fake_run):
-        export_diagram_pdf(section, tmp_path, "/usr/local/bin/mmdc")
+        export_diagram_pdf(section, tmp_path, _MMDC)
 
     assert not Path(seen_paths[0]).exists()
 
@@ -95,7 +115,7 @@ def test_export_diagram_pdf_raises_on_mmdc_failure(section, tmp_path):
     error = subprocess.CalledProcessError(1, "mmdc")
     with patch(patch_target, side_effect=error):
         with pytest.raises(subprocess.CalledProcessError):
-            export_diagram_pdf(section, tmp_path, "/usr/local/bin/mmdc")
+            export_diagram_pdf(section, tmp_path, _MMDC)
 
 
 def test_export_diagram_pdf_cleans_up_temp_file_on_failure(section, tmp_path):
@@ -109,7 +129,7 @@ def test_export_diagram_pdf_cleans_up_temp_file_on_failure(section, tmp_path):
 
     with patch("spartastruct.renderer.pdf_exporter.subprocess.run", side_effect=fake_run):
         with pytest.raises(subprocess.CalledProcessError):
-            export_diagram_pdf(section, tmp_path, "/usr/local/bin/mmdc")
+            export_diagram_pdf(section, tmp_path, _MMDC)
 
     assert not Path(seen_paths[0]).exists()
 
@@ -117,7 +137,7 @@ def test_export_diagram_pdf_cleans_up_temp_file_on_failure(section, tmp_path):
 def test_export_all_pdfs_skips_empty_mermaid(section, empty_section, tmp_path):
     with patch("spartastruct.renderer.pdf_exporter.subprocess.run") as mock_run:
         mock_run.return_value = MagicMock(returncode=0)
-        results = export_all_pdfs([section, empty_section], tmp_path, "/usr/local/bin/mmdc")
+        results = export_all_pdfs([section, empty_section], tmp_path, _MMDC)
 
     assert len(results) == 1
     assert results[0] == tmp_path / "class_diagram.pdf"
@@ -128,7 +148,7 @@ def test_export_all_pdfs_calls_progress_callback(section, tmp_path):
     calls = []
     patch_target = "spartastruct.renderer.pdf_exporter.subprocess.run"
     with patch(patch_target, return_value=MagicMock(returncode=0)):
-        export_all_pdfs([section], tmp_path, "/usr/local/bin/mmdc", progress_callback=calls.append)
+        export_all_pdfs([section], tmp_path, _MMDC, progress_callback=calls.append)
 
     assert len(calls) == 1
     assert "Class Diagram" in calls[0]
@@ -146,7 +166,7 @@ def test_export_all_pdfs_returns_all_paths(tmp_path):
     ]
     patch_target = "spartastruct.renderer.pdf_exporter.subprocess.run"
     with patch(patch_target, return_value=MagicMock(returncode=0)):
-        results = export_all_pdfs(sections, tmp_path, "/usr/local/bin/mmdc")
+        results = export_all_pdfs(sections, tmp_path, _MMDC)
 
     assert len(results) == 3
     assert all(p.suffix == ".pdf" for p in results)
@@ -163,7 +183,7 @@ def test_export_diagram_png_calls_mmdc_with_transparent_bg(tmp_path):
         "spartastruct.renderer.pdf_exporter.subprocess.run",
         return_value=MagicMock(returncode=0),
     ) as mock_run:
-        out = export_diagram_png(section, tmp_path, "/usr/bin/mmdc")
+        out = export_diagram_png(section, tmp_path, _MMDC)
 
     assert out == tmp_path / "class_diagram.png"
     cmd = mock_run.call_args[0][0]
@@ -181,7 +201,7 @@ def test_export_diagram_png_output_extension_is_png(tmp_path):
     section = DiagramSection(key="er_diagram", title="ER", description="", mermaid="erDiagram")
     mock_ret = MagicMock(returncode=0)
     with patch("spartastruct.renderer.pdf_exporter.subprocess.run", return_value=mock_ret):
-        out = export_diagram_png(section, tmp_path, "/usr/bin/mmdc")
+        out = export_diagram_png(section, tmp_path, _MMDC)
     assert out.suffix == ".png"
 
 
@@ -192,7 +212,7 @@ def test_export_all_pngs_skips_empty(tmp_path):
     ]
     mock_ret = MagicMock(returncode=0)
     with patch("spartastruct.renderer.pdf_exporter.subprocess.run", return_value=mock_ret):
-        results = export_all_pngs(sections, tmp_path, "/usr/bin/mmdc")
+        results = export_all_pngs(sections, tmp_path, _MMDC)
     assert len(results) == 1
     assert results[0].suffix == ".png"
 
@@ -204,7 +224,7 @@ def test_export_all_pngs_returns_paths(tmp_path):
     ]
     mock_ret = MagicMock(returncode=0)
     with patch("spartastruct.renderer.pdf_exporter.subprocess.run", return_value=mock_ret):
-        results = export_all_pngs(sections, tmp_path, "/usr/bin/mmdc")
+        results = export_all_pngs(sections, tmp_path, _MMDC)
     keys = {r.stem for r in results}
     assert keys == {"x", "y"}
 
@@ -223,8 +243,7 @@ def test_export_diagram_png_cleans_up_temp_file_on_failure(tmp_path):
         side_effect=subprocess.CalledProcessError(1, "mmdc"),
     ):
         with pytest.raises(subprocess.CalledProcessError):
-            export_diagram_png(section, tmp_path, "/usr/bin/mmdc")
-    # No .mmd temp files should remain
+            export_diagram_png(section, tmp_path, _MMDC)
     assert list(tmp_path.glob("*.mmd")) == []
 
 
@@ -238,6 +257,6 @@ def test_export_diagram_png_writes_mermaid_to_temp_file(tmp_path):
         return MagicMock(returncode=0)
 
     with patch("spartastruct.renderer.pdf_exporter.subprocess.run", side_effect=capture_run):
-        export_diagram_png(section, tmp_path, "/usr/bin/mmdc")
+        export_diagram_png(section, tmp_path, _MMDC)
 
     assert written_content == ["graph TD\n  A-->B"]
