@@ -62,3 +62,49 @@ def test_sequence_diagram_empty_fallback(empty_result):
     out = sequence_diagram.generate(empty_result)
     assert "sequenceDiagram" in out
     assert "Client" in out
+
+
+# ── State Diagram ─────────────────────────────────────────────────────────────
+
+def test_state_diagram_header(fastapi_result):
+    out = state_diagram.generate(fastapi_result)
+    assert "stateDiagram-v2" in out
+
+
+def test_state_diagram_empty_has_fallback(empty_result):
+    out = state_diagram.generate(empty_result)
+    assert "stateDiagram-v2" in out
+    assert "[*]" in out
+
+
+def test_state_diagram_detects_status_fields():
+    cls = ClassInfo(
+        name="Order",
+        attributes=[AttributeInfo(name="status", type="str")],
+        methods=[
+            MethodInfo(name="approve"),
+            MethodInfo(name="reject"),
+            MethodInfo(name="cancel"),
+        ],
+    )
+    fr = FileResult(path="order.py", classes=[cls], imports=ImportInfo())
+    result = AnalysisResult(files_analyzed=[fr])
+    out = state_diagram.generate(result)
+    assert "stateDiagram-v2" in out
+    assert "Order" in out
+
+
+def test_state_diagram_transition_methods():
+    cls = ClassInfo(
+        name="Task",
+        attributes=[AttributeInfo(name="state", type="str")],
+        methods=[
+            MethodInfo(name="start"),
+            MethodInfo(name="complete"),
+            MethodInfo(name="fail"),
+        ],
+    )
+    fr = FileResult(path="task.py", classes=[cls], imports=ImportInfo())
+    result = AnalysisResult(files_analyzed=[fr])
+    out = state_diagram.generate(result)
+    assert "start" in out or "complete" in out or "fail" in out
